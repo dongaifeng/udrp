@@ -1,7 +1,11 @@
 <template>
   <div class="dashboard-container">
-    <div class="dashboard-text">name: {{ name }}</div>
+    <div id="chalk-style" class="dashboard-text">name: {{ name }}</div>
     <div class="dashboard-text">roles: <span v-for="role in roles" :key="role">{{ role }}</span></div>
+
+    <div v-for="i in $store.state.settings.color" :key="i">
+      <div :style="{background: i}">{{ i }}</div>
+    </div>
   </div>
 </template>
 

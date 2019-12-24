@@ -6,6 +6,7 @@
         ref="tag"
         :key="tag.path"
         :class="isActive(tag)?'active':''"
+        :style="isActive(tag) ? `background: ${theme}` : ''"
         :to="{ path: tag.path, query: tag.query, fullPath: tag.fullPath }"
         tag="span"
         class="tags-view-item"
@@ -28,6 +29,7 @@
 <script>
 import ScrollPane from './ScrollPane'
 import path from 'path'
+import { mapGetters } from 'vuex'
 
 export default {
   components: { ScrollPane },
@@ -41,6 +43,9 @@ export default {
     }
   },
   computed: {
+    ...mapGetters([
+      'theme'
+    ]),
     visitedViews() {
       return this.$store.state.tagsView.visitedViews
     },

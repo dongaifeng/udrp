@@ -1,9 +1,10 @@
-@import './variables.scss';
-@import './mixin.scss';
+@import './variables.scss'; // 全局变量， 定义菜单栏颜色值
+@import './mixin.scss';     // 混入样式
 @import './transition.scss';
-@import './element-ui.scss';
+@import './element-ui.scss'; // 全局修改element-ui样式
 @import './sidebar.scss';
 
+// reset 样式
 body {
   height: 100%;
   -moz-osx-font-smoothing: grayscale;
