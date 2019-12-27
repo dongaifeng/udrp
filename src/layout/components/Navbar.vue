@@ -15,9 +15,10 @@
           <theme-picker class="right-menu-item hover-effect" @change="themeChange" />
         </el-tooltip>
 
-        <el-tooltip content="Global Size" effect="dark" placement="bottom">
+        <!-- <el-tooltip content="Global Size" effect="dark" placement="bottom">
           <div class="right-menu-item hover-effect">fnkdjnfb</div>
-        </el-tooltip>
+        </el-tooltip> -->
+
       </template>
 
       <!-- 头像 -->
@@ -25,7 +26,7 @@
         <div class="avatar-wrapper">
           <!-- 添加用名名称 -->
           <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
-          <span class="avatar-name">admin22</span>
+          <span class="avatar-name">{{ name || 'admin' }}</span>
           <!-- <i class="el-icon-caret-bottom" /> -->
         </div>
 
@@ -61,7 +62,7 @@ export default {
     ThemePicker
   },
   computed: {
-    ...mapGetters(['sidebar', 'avatar'])
+    ...mapGetters(['sidebar', 'avatar', 'name'])
   },
   methods: {
     toggleSideBar() {

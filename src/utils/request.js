@@ -13,7 +13,7 @@ const service = axios.create({
 // request interceptor
 service.interceptors.request.use(
   config => {
-    // do something before request is sent
+    // 设置请求头携带token  或者  cookie
 
     if (store.getters.token) {
       // let each request carry token
@@ -45,8 +45,8 @@ service.interceptors.response.use(
   response => {
     const res = response.data
 
-    // if the custom code is not 20000, it is judged as an error.
-    if (res.code !== 20000) {
+    // 自定义状态码
+    if (res.result !== 'success') {
       Message({
         message: res.message || 'Error',
         type: 'error',
@@ -68,7 +68,7 @@ service.interceptors.response.use(
       }
       return Promise.reject(new Error(res.message || 'Error'))
     } else {
-      return res
+      return res.data // 这里是返回的数据
     }
   },
   error => {

@@ -11,8 +11,8 @@
 </template>
 
 <script>
-const version = require('element-ui/package.json').version // element-ui version from node_modules
-const ORIGINAL_THEME = '#409EFF' // default color
+// const version = require('element-ui/package.json').version // element-ui version from node_modules
+// const ORIGINAL_THEME = '#409EFF' // default color
 
 export default {
   data() {
@@ -35,10 +35,10 @@ export default {
       immediate: true
     },
     async theme(val) {
-      const oldVal = this.chalk ? this.theme : ORIGINAL_THEME
+      // const oldVal = this.chalk ? this.theme : ORIGINAL_THEME
       if (typeof val !== 'string') return
       const themeCluster = this.getThemeCluster(val.replace('#', ''))
-      const originalCluster = this.getThemeCluster(oldVal.replace('#', ''))
+      // const originalCluster = this.getThemeCluster(oldVal.replace('#', ''))
       // console.log(themeCluster, originalCluster)
 
       // 修改主题方法 将编译的颜色渐进数组放到store
