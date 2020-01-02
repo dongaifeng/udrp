@@ -4,7 +4,7 @@ import 'normalize.css/normalize.css' // css 初始化工具
 
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
-import locale from 'element-ui/lib/locale/lang/en' // 国际化
+import locale from 'element-ui/lib/locale/lang/zh-CN' // 国际化
 
 import '@/styles/index.scss' // 全局css样式
 

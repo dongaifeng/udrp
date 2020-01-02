@@ -42,51 +42,42 @@
 
     </el-form>
 
-    <el-table
-      v-loading="listLoading"
-      :data="list"
-      element-loading-text="Loading"
-      border
-      fit
-      highlight-current-row
+    <!-- 表格 -->
+    <comp-table
+      :listen-height="false"
+      :height="'60vh'"
+      :refresh="tableInfo.refresh"
+      :init-curpage="tableInfo.initCurpage"
+      :table-data.sync="tableInfo.data"
+      :check-box="true"
+      :tab-index="true"
+      :api="handleEvent"
+      :pager="true"
+      :query="filterInfo.query"
+      :field-list="tableInfo.fieldList"
+      :list-type-info="listTypeInfo"
+      :handle="tableInfo.handle"
+      @handleClick="handleClick"
+      @handleEvent="handleEvent"
+      @selectFile="handleBtnClick"
     >
-      <el-table-column align="center" label="ID" width="95">
-        <template slot-scope="scope">
-          {{ scope.$index }}
-        </template>
-      </el-table-column>
-      <el-table-column label="系统">
-        <template slot-scope="scope">
-          {{ scope.row.title }}
-        </template>
-      </el-table-column>
-      <el-table-column label="角色名称" width="110" align="center">
-        <template slot-scope="scope">
-          <span>{{ scope.row.author }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="角色描述" width="110" align="center">
-        <template slot-scope="scope">
-          {{ scope.row.pageviews }}
-        </template>
-      </el-table-column>
-      <el-table-column class-name="status-col" label="显示顺序" width="110" align="center">
-        <template slot-scope="scope">
-          <el-tag :type="scope.row.status | statusFilter">{{ scope.row.status }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column align="center" prop="created_at" label="状态" width="200">
-        <template slot-scope="scope">
-          <i class="el-icon-time" />
-          <span>{{ scope.row.display_time }}</span>
-        </template>
-      </el-table-column>
-    </el-table>
+      <!-- 自定义插槽显示状态 -->
+      <template v-slot:col-myslot="scope">
+        <el-select v-model="form.region" placeholder="请选择">
+          <el-option label="Zone one" value="shanghai" />
+          <el-option label="Zone two" value="beijing" />
+        </el-select>
+      </template>
+
+    </comp-table>
   </div>
 </template>
 
 <script>
+import CompTable from '@/components/CompTable'
+import { getInfo } from '@/api/user'
 export default {
+  components: { CompTable },
   data() {
     return {
       form: {
@@ -97,7 +88,51 @@ export default {
         delivery: false,
         type: [],
         resource: '',
-        desc: ''
+        desc: getInfo
+      },
+      listTypeInfo: {
+        treeList: []
+      },
+      // 表格相关
+      tableInfo: {
+        refresh: 23,
+        initTable: true,
+        initCurpage: 1,
+        pager: false,
+        data: [{ age: '222', name: 'skfhgd' }, { age: '222', name: 'skfhgd' }, { age: '222', name: 'skfhgd' }],
+        fieldList: [
+          { label: '姓名', value: 'name' },
+          { label: '下拉框', value: 'myslot', type: 'slot' },
+          { label: '年龄', value: 'age' }
+
+        ],
+        handle: {
+          fixed: 'right',
+          label: '操作',
+          width: '200',
+          btList: [
+            { label: '选择', type: 'primary', icon: 'el-icon-ship', event: 'selectFile', show: true },
+            { label: '删除', type: 'primary', icon: 'el-icon-ship', event: 'selectFile', show: false },
+            { label: '修改', type: 'info', icon: 'el-icon-ship', event: 'selectFile', show: true }
+          ]
+        }
+      },
+
+      // 过滤相关配置
+      filterInfo: {
+        query: {
+          name: '',
+          suffix: '',
+          f_id: '',
+          type: this.type
+        },
+        list: [
+          { type: 'input', label: '名称', value: 'name' },
+          // {type: 'input', label: initType(this.type) + '类型', value: 'suffix'},
+          { type: 'select', label: '所在目录', value: 'f_id', list: 'treeList' },
+          // {type: 'date', label: '创建时间', value: 'create_time'},
+          { type: 'button', label: '搜索', btType: 'primary', icon: 'el-icon-search', event: 'search', show: true }
+        ]
       }
     }
   },
@@ -110,6 +145,15 @@ export default {
         message: 'cancel!',
         type: 'warning'
       })
+    },
+    handleBtnClick(data) {
+      console.log('data', data)
+    },
+    handleEvent() {
+
+    },
+    handleClick() {
+
     }
   }
 }

@@ -6,12 +6,16 @@ const state = {
   token: getToken(),
   name: '',
   avatar: 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',
-  roles: ['admin']
+  roles: [],
+  userinfo: null
 }
 
 const mutations = {
   SET_TOKEN: (state, token) => {
     state.token = token
+  },
+  SET_USERINFO: (state, userinfo) => {
+    state.userinfo = userinfo
   },
   SET_NAME: (state, name) => {
     state.name = name
@@ -31,13 +35,13 @@ const actions = {
     return new Promise((resolve, reject) => {
       login({ username: username.trim(), password: password }).then(response => {
         console.log(response, '<=====')
-        const { UserName, UserInfo } = response
+        const { UserName, UserID } = response
         // 登录成功 存储用户信息
-        commit('SET_TOKEN', UserName)
-        // commit('SET_ROLES', [UserInfo.UserName])
-        commit('SET_NAME', UserInfo.DisplayName)
-
-        setToken(UserName)
+        commit('SET_NAME', UserName)
+        commit('SET_USERINFO', response)
+        // 模仿token
+        commit('SET_TOKEN', UserID)
+        setToken(UserID)
         resolve()
       }).catch(error => {
         reject(error)
@@ -45,33 +49,22 @@ const actions = {
     })
   },
 
-  // get user info
+  // 获取用户信息
   getInfo({ commit, state }) {
     return new Promise((resolve, reject) => {
-      resolve({
-        roles: ['admin']
+      getInfo({ UserID: state.token }).then(response => {
+        const userInfo = response
+        if (!userInfo) {
+          reject('没有用户信息，请重新登录')
+        }
+        commit('SET_NAME', userInfo.UserName)
+        // 保存完整的用户信息
+        const _info = { ...state.userinfo, ...userInfo }
+        commit('SET_USERINFO', _info)
+        resolve(_info)
+      }).catch(error => {
+        reject(error)
       })
-      // getInfo(state.token).then(response => {
-      //   const { data } = response
-
-      //   if (!data) {
-      //     reject('Verification failed, please Login again.')
-      //   }
-
-      //   const { roles, name, avatar } = data
-
-      //   // roles must be a non-empty array
-      //   if (!roles || roles.length <= 0) {
-      //     reject('getInfo: roles must be a non-null array!')
-      //   }
-
-      //   commit('SET_ROLES', roles)
-      //   commit('SET_NAME', name)
-      //   commit('SET_AVATAR', avatar)
-      //   resolve(data)
-      // }).catch(error => {
-      //   reject(error)
-      // })
     })
   },
 

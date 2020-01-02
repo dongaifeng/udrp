@@ -1,4 +1,6 @@
 import { asyncRoutes, constantRoutes } from '@/router'
+import { getRoute } from '@/api/user'
+import Layout from '@/layout'
 
 /**
  * Use meta.role to determine if the current user has permission
@@ -14,23 +16,39 @@ function hasPermission(roles, route) {
 }
 
 /**
- * Filter asynchronous routing tables by recursion
+ * 过滤从后台获取的路由
  * @param routes asyncRoutes
  * @param roles
  */
-export function filterAsyncRoutes(routes, roles) {
+export function filterAsyncRoutes(routes = []) {
+  console.log('数据', routes)
   const res = []
+  const map = {}
 
   routes.forEach(route => {
-    const tmp = { ...route }
-    if (hasPermission(roles, tmp)) {
-      if (tmp.children) {
-        tmp.children = filterAsyncRoutes(tmp.children, roles)
-      }
-      res.push(tmp)
+    const { FuncName, Url, FuncIcon, FuncID, ParentID, FuncType, Component, FuncCode } = route
+    const item = {}
+    item.path = Url || ''
+    item.component = FuncType === '1' ? Layout : resolve => require([`@/views${Component}`], resolve)
+    item.name = FuncCode || ''
+    item.meta = {}
+    item.meta.title = FuncName || ''
+    item.meta.icon = FuncIcon || ''
+    item.id = FuncID || ''
+    if (FuncType === '1') {
+      item.redirect = Component
+      item.children = map[FuncID] ? map[FuncID].children : []
+      map[FuncID] = item
+    }
+    if (FuncType === '2') {
+      if (!map[ParentID]) { map[ParentID] = {}; map[ParentID].children = [] }
+      map[ParentID].children.push(item)
     }
   })
-
+  console.log('map===========', map)
+  Object.keys(map).forEach(key => res.push(map[key]))
+  console.log('res===========', res)
+  res.push({ path: '*', redirect: '/404', hidden: true })
   return res
 }
 
@@ -47,16 +65,16 @@ const mutations = {
 }
 
 const actions = {
-  generateRoutes({ commit }, roles) {
+  async generateRoutes({ commit }, data) {
+    // 从后台加载路由表
+    const { menuData } = await getRoute(data)
     return new Promise(resolve => {
-      // let accessedRoutes
-      // if (roles.includes('admin')) {
-      //   accessedRoutes = asyncRoutes || []
-      // } else {
-      //   accessedRoutes = filterAsyncRoutes(asyncRoutes, roles)
-      // }
-      commit('SET_ROUTES', asyncRoutes)
-      resolve(asyncRoutes)
+      let accessedRoutes
+      if (menuData) {
+        accessedRoutes = filterAsyncRoutes(menuData)
+      }
+      commit('SET_ROUTES', accessedRoutes)
+      resolve(accessedRoutes)
     })
   }
 }

@@ -54,42 +54,42 @@ export const constantRoutes = [
       component: () => import('@/views/dashboard/index'),
       meta: { title: '首页', icon: 'dashboard', affix: true }
     }]
-  },
-
-  {
-    path: '/system',
-    component: Layout,
-    redirect: '/system/table',
-    name: 'System',
-    meta: { title: '系统管理', icon: 'example' },
-    children: [
-      {
-        path: 'role',
-        name: 'Role',
-        component: () => import('@/views/role/index'),
-        meta: { title: '角色管理', icon: 'table' }
-      },
-      {
-        path: 'tree',
-        name: 'Tree',
-        component: () => import('@/views/tree/index'),
-        meta: { title: 'Tree', icon: 'tree' }
-      }
-    ]
-  },
-
-  {
-    path: '/form',
-    component: Layout,
-    children: [
-      {
-        path: 'index',
-        name: 'Form',
-        component: () => import('@/views/role/index'),
-        meta: { title: '表单', icon: 'form' }
-      }
-    ]
   }
+
+  // {
+  //   path: '/system',
+  //   component: Layout,
+  //   redirect: '/system/table',
+  //   name: 'System',
+  //   meta: { title: '系统管理', icon: 'example' },
+  //   children: [
+  //     {
+  //       path: 'role',
+  //       name: 'Role',
+  //       component: () => import('@/views/role/index'),
+  //       meta: { title: '角色管理', icon: 'table' }
+  //     },
+  //     {
+  //       path: 'tree',
+  //       name: 'Tree',
+  //       component: () => import('@/views/tree/index'),
+  //       meta: { title: 'Tree', icon: 'tree' }
+  //     }
+  //   ]
+  // },
+
+  // {
+  //   path: '/form',
+  //   component: Layout,
+  //   children: [
+  //     {
+  //       path: 'index',
+  //       name: 'Form',
+  //       component: () => import('@/views/form/index'),
+  //       meta: { title: '表单', icon: 'form' }
+  //     }
+  //   ]
+  // }
 ]
 
 /**

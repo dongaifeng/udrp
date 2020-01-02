@@ -116,7 +116,7 @@ export default {
             this.loading = false
           })
         } else {
-          console.log('error submit!!')
+          console.log('用户名或密码错误')
           return false
         }
       })
