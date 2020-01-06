@@ -1,27 +1,12 @@
-import { asyncRoutes, constantRoutes } from '@/router'
+import { constantRoutes } from '@/router'
 import { getRoute } from '@/api/user'
 import Layout from '@/layout'
 
 /**
- * Use meta.role to determine if the current user has permission
- * @param roles
- * @param route
- */
-function hasPermission(roles, route) {
-  if (route.meta && route.meta.roles) {
-    return roles.some(role => route.meta.roles.includes(role))
-  } else {
-    return true
-  }
-}
-
-/**
  * 过滤从后台获取的路由
- * @param routes asyncRoutes
  * @param roles
  */
 export function filterAsyncRoutes(routes = []) {
-  console.log('数据', routes)
   const res = []
   const map = {}
 
@@ -45,9 +30,7 @@ export function filterAsyncRoutes(routes = []) {
       map[ParentID].children.push(item)
     }
   })
-  console.log('map===========', map)
   Object.keys(map).forEach(key => res.push(map[key]))
-  console.log('res===========', res)
   res.push({ path: '*', redirect: '/404', hidden: true })
   return res
 }

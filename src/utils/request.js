@@ -7,14 +7,13 @@ import { getToken } from '@/utils/auth'
 const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
   // withCredentials: true, // send cookies when cross-domain requests
-  timeout: 5000 // request timeout
+  timeout: 10000 // request timeout
 })
 
 // request interceptor
 service.interceptors.request.use(
   config => {
     // 设置请求头携带token  或者  cookie
-
     if (store.getters.token) {
       // let each request carry token
       // ['X-Token'] is a custom headers key

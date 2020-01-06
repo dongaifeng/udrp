@@ -22,11 +22,11 @@
       </template>
 
       <!-- 头像 -->
-      <el-dropdown class="avatar-container right-menu-item hover-effect" trigger="click">
+      <el-dropdown class="avatar-container right-menu-item hover-effect" trigger="hover">
         <div class="avatar-wrapper">
           <!-- 添加用名名称 -->
           <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
-          <span class="avatar-name">{{ name || 'admin' }}</span>
+          <span class="avatar-name">{{ name || 'no name' }}</span>
           <!-- <i class="el-icon-caret-bottom" /> -->
         </div>
 
@@ -34,18 +34,41 @@
           <router-link to="/">
             <el-dropdown-item>返回首页</el-dropdown-item>
           </router-link>
-          <a target="_blank" href="https://github.com/PanJiaChen/vue-admin-template/">
+          <!-- <a target="_blank" href="https://github.com/PanJiaChen/vue-admin-template/">
             <el-dropdown-item>Github</el-dropdown-item>
           </a>
           <a target="_blank" href="https://panjiachen.github.io/vue-element-admin-site/#/">
             <el-dropdown-item>Docs</el-dropdown-item>
-          </a>
+          </a> -->
           <el-dropdown-item divided>
-            <span style="display:block;" @click="logout">Log Out</span>
+            <span style="display:block;" @click="dialogUpdatePwd = true">修改密码</span>
+          </el-dropdown-item>
+          <el-dropdown-item divided>
+            <span style="display:block;" @click="logout">退出登录</span>
           </el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
     </div>
+
+    <!-- 修改密码窗口 -->
+    <el-dialog title="修改密码" :visible.sync="dialogUpdatePwd" width="30%" append-to-body>
+      <el-form ref="refUpdatePwd" :model="formUpdatePwd" :rules="rules">
+        <el-form-item label="原密码" prop="pwd">
+          <el-input v-model="formUpdatePwd.pwd" autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="新密码" prop="newpwd">
+          <el-input v-model="formUpdatePwd.newpwd" autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="确认新密码" prop="rpnewpwd">
+          <el-input v-model="formUpdatePwd.rpnewpwd" autocomplete="off" />
+        </el-form-item>
+
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogUpdatePwd = false">取 消</el-button>
+        <el-button type="primary" @click="submitUpdatePwd">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -54,12 +77,45 @@ import { mapGetters } from 'vuex'
 import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
 import ThemePicker from '@/components/ThemePicker'
+import { apiUpdatePwd } from '@/api/user'
+import { validatePassword } from '@/utils/validate'
 
 export default {
   components: {
     Breadcrumb,
     Hamburger,
     ThemePicker
+  },
+  data() {
+    const validateRpNewPwd = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请再次输入密码'))
+      } else if (value !== this.formUpdatePwd.newpwd) {
+        callback(new Error('两次输入密码不一致!'))
+      } else {
+        callback()
+      }
+    }
+    return {
+      dialogUpdatePwd: false,
+      formUpdatePwd: {
+        pwd: '',
+        newpwd: '',
+        rpnewpwd: ''
+      },
+      rules: {
+        pwd: [
+          { required: true, message: '请输入原密码', trigger: 'blur' }
+        ],
+        newpwd: [
+          { required: true, message: '请输入新密码', trigger: 'blur' },
+          { validator: validatePassword(), trigger: 'blur' }
+        ],
+        rpnewpwd: [
+          { validator: validateRpNewPwd, trigger: 'blur' }
+        ]
+      }
+    }
   },
   computed: {
     ...mapGetters(['sidebar', 'avatar', 'name'])
@@ -71,6 +127,18 @@ export default {
     async logout() {
       await this.$store.dispatch('user/logout')
       this.$router.push(`/login?redirect=${this.$route.fullPath}`)
+    },
+    // updatePwd() {
+    //   this.dialogUpdatePwd = true
+    // },
+    submitUpdatePwd() {
+      this.$refs.refUpdatePwd.validate((valid) => {
+        if (valid) {
+          apiUpdatePwd(this.formUpdatePwd).then(res => {
+            this.dialogUpdatePwd = false
+          })
+        }
+      })
     },
 
     // 主题点击

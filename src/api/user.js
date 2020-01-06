@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import store from '@/store'
 
 export function login(data) {
   return request({
@@ -23,6 +24,14 @@ export function logout() {
   return request({
     url: '/user/logout',
     method: 'post'
+  })
+}
+
+export function apiUpdatePwd(data) {
+  return request({
+    url: '/api/Login/UpdatePwd',
+    method: 'post',
+    data: { UserID: store.getters.UserID, ...data }
   })
 }
 

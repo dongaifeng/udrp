@@ -45,7 +45,6 @@
 
       <div class="tips">
         <span style="margin-right:20px;">使用sso登录</span>
-
       </div>
 
     </el-form>
@@ -53,21 +52,14 @@
 </template>
 
 <script>
-import { validUsername } from '@/utils/validate'
+import { validUsername, validatePassword } from '@/utils/validate'
 
 export default {
   name: 'Login',
   data() {
     const validateUsername = (rule, value, callback) => {
       if (!validUsername(value)) {
-        callback(new Error('Please enter the correct user name'))
-      } else {
-        callback()
-      }
-    }
-    const validatePassword = (rule, value, callback) => {
-      if (value.length < 1) {
-        callback(new Error('The password can not be less than 6 digits'))
+        callback(new Error('请输入用户名'))
       } else {
         callback()
       }
@@ -79,7 +71,7 @@ export default {
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
-        password: [{ required: true, trigger: 'blur', validator: validatePassword }]
+        password: [{ required: true, trigger: 'blur', validator: validatePassword() }]
       },
       loading: false,
       passwordType: 'password',
