@@ -8,7 +8,7 @@
     :label-width="labelWidth"
   >
     <el-row>
-      <el-col v-for="(item, index) in fieldList.filter(item => !item.hidden) " :key="index" :span="6">
+      <el-col v-for="(item, index) in fieldList.filter(item => !item.hidden) " :key="index" :span="span">
         <el-form-item
           :prop="item.value"
           :label="item.label"
@@ -90,6 +90,10 @@
 export default {
   name: 'CompForm',
   props: {
+    span: {
+      type: Number,
+      default: 6
+    },
     // 自定义类名
     className: {
       type: String

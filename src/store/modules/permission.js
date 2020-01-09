@@ -20,12 +20,12 @@ export function filterAsyncRoutes(routes = []) {
     item.meta.title = FuncName || ''
     item.meta.icon = FuncIcon || ''
     item.id = FuncID || ''
-    if (FuncType === '1') {
+    if (FuncType.trim() === '1') {
       item.redirect = Component
       item.children = map[FuncID] ? map[FuncID].children : []
       map[FuncID] = item
     }
-    if (FuncType === '2') {
+    if (FuncType.trim() === '2') {
       if (!map[ParentID]) { map[ParentID] = {}; map[ParentID].children = [] }
       map[ParentID].children.push(item)
     }

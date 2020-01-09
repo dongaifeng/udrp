@@ -6,23 +6,31 @@
       @toggleClick="toggleSideBar"
     />
 
-    <breadcrumb class="breadcrumb-container" />
+    <!-- <breadcrumb class="breadcrumb-container" /> -->
 
     <div class="right-menu">
       <template>
         <!-- 换肤 -->
-        <el-tooltip content="主题" effect="dark" placement="bottom">
+        <!-- <el-tooltip content="主题" effect="dark" placement="bottom">
           <theme-picker class="right-menu-item hover-effect" @change="themeChange" />
+        </el-tooltip> -->
+
+        <el-tooltip content="修改密码" effect="dark" placement="bottom"  >
+          <div class="right-menu-item hover-effect" @click="dialogUpdatePwd = true">
+             <svg-icon iconClass="lock" />
+            修改密码</div>
         </el-tooltip>
 
-        <!-- <el-tooltip content="Global Size" effect="dark" placement="bottom">
-          <div class="right-menu-item hover-effect">fnkdjnfb</div>
-        </el-tooltip> -->
+        <el-tooltip content="退出登录" effect="dark" placement="bottom">
+          <div class="right-menu-item hover-effect" @click="logout">
+             <svg-icon iconClass="switch" />
+            退出登录</div>
+        </el-tooltip>
 
       </template>
 
       <!-- 头像 -->
-      <el-dropdown class="avatar-container right-menu-item hover-effect" trigger="hover">
+      <el-dropdown v-if='0' class="avatar-container right-menu-item hover-effect" trigger="hover">
         <div class="avatar-wrapper">
           <!-- 添加用名名称 -->
           <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
@@ -74,7 +82,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import Breadcrumb from '@/components/Breadcrumb'
+// import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
 import ThemePicker from '@/components/ThemePicker'
 import { apiUpdatePwd } from '@/api/user'
@@ -82,7 +90,7 @@ import { validatePassword } from '@/utils/validate'
 
 export default {
   components: {
-    Breadcrumb,
+    // Breadcrumb,
     Hamburger,
     ThemePicker
   },
@@ -157,7 +165,7 @@ export default {
   height: 50px;
   overflow: hidden;
   position: relative;
-  background: #fff;
+  background: linear-gradient(#3a8ac9, #235b94);
   box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
 
   .hamburger-container {
@@ -167,7 +175,7 @@ export default {
     cursor: pointer;
     transition: background 0.3s;
     -webkit-tap-highlight-color: transparent;
-
+    color: #fff !important;
     &:hover {
       background: rgba(0, 0, 0, 0.025);
     }
@@ -190,8 +198,8 @@ export default {
       display: inline-block;
       padding: 0 8px;
       height: 100%;
-      font-size: 18px;
-      color: #5a5e66;
+      font-size: 14px;
+      color: #fff;
       vertical-align: text-bottom;
 
       &.hover-effect {
@@ -217,7 +225,7 @@ export default {
           right: -4px;
           top: -13px;
           font-size: 16px;
-          color: blue;
+          color: #fff;
         }
 
         .user-avatar {

@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-container">
-
+    
     <div class="panel-group">
       <div v-for="item in 4" :key="item" class="card-panel-col">
         <panel-group @handleSetLineChartData="handleSetLineChartData" />

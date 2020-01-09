@@ -1,83 +1,71 @@
 <template>
   <div class="app-container">
-    <el-form ref="form" :model="form" label-width="120px">
-      <el-row>
-        <el-col :span="6">
-          <el-form-item label="系统">
-            <el-select v-model="form.region" placeholder="please select your zone">
+    <el-row :gutter="20">
+      <el-col :span="8">
+        <comp-header context="头部信息" />
+        <!-- 表格 -->
+        <comp-table
+          :listen-height="false"
+          :height="'60vh'"
+          :refresh="tableInfo.refresh"
+          :init-curpage="tableInfo.initCurpage"
+          :table-data.sync="tableInfo.data"
+          :check-box="true"
+          :tab-index="true"
+          :api="handleEvent"
+          :pager="true"
+          :query="filterInfo.query"
+          :field-list="tableInfo.fieldList"
+          :list-type-info="listTypeInfo"
+          :handle="tableInfo.handle"
+          @handleClick="handleClick"
+          @handleEvent="handleEvent"
+          @selectFile="handleBtnClick"
+        />
+      </el-col>
+
+      <el-col :span="16">
+        <comp-header context="头部信息" />
+        <!-- 表格 -->
+        <comp-table
+          :listen-height="false"
+          :height="'60vh'"
+          :refresh="tableInfo2.refresh"
+          :init-curpage="tableInfo2.initCurpage"
+          :table-data.sync="tableInfo2.data"
+          :check-box="true"
+          :tab-index="true"
+          :api="handleEvent"
+          :pager="true"
+          :query="filterInfo.query"
+          :field-list="tableInfo2.fieldList"
+          :list-type-info="listTypeInfo"
+          :handle="tableInfo2.handle"
+          @handleClick="handleClick"
+          @handleEvent="handleEvent"
+          @selectFile="handleBtnClick"
+        >
+          <!-- 自定义插槽显示状态 -->
+          <template v-slot:col-myslot="scope">
+            <el-select v-model="form.region" placeholder="请选择">
               <el-option label="Zone one" value="shanghai" />
               <el-option label="Zone two" value="beijing" />
             </el-select>
-          </el-form-item>
-        </el-col>
-        <el-col :span="6">
-          <el-form-item label="角色名称">
-            <el-input v-model="form.name" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="6">
-          <el-form-item label="角色描述">
-            <el-input v-model="form.name" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="6">
-          <el-form-item label="状态">
-            <el-select v-model="form.region" placeholder="please select your zone">
-              <el-option label="Zone one" value="shanghai" />
-              <el-option label="Zone two" value="beijing" />
-            </el-select>
-          </el-form-item>
-        </el-col>
-      </el-row>
+          </template>
 
-      <el-row>
-        <el-col>
-          <el-form-item>
-            <el-button type="primary" @click="onSubmit">查询</el-button>
-            <el-button @click="onCancel">添加</el-button>
-            <el-button @click="onCancel">删除</el-button>
-          </el-form-item>
-        </el-col>
-      </el-row>
+        </comp-table>
+      </el-col>
+    </el-row>
 
-    </el-form>
-
-    <!-- 表格 -->
-    <comp-table
-      :listen-height="false"
-      :height="'60vh'"
-      :refresh="tableInfo.refresh"
-      :init-curpage="tableInfo.initCurpage"
-      :table-data.sync="tableInfo.data"
-      :check-box="true"
-      :tab-index="true"
-      :api="handleEvent"
-      :pager="true"
-      :query="filterInfo.query"
-      :field-list="tableInfo.fieldList"
-      :list-type-info="listTypeInfo"
-      :handle="tableInfo.handle"
-      @handleClick="handleClick"
-      @handleEvent="handleEvent"
-      @selectFile="handleBtnClick"
-    >
-      <!-- 自定义插槽显示状态 -->
-      <template v-slot:col-myslot="scope">
-        <el-select v-model="form.region" placeholder="请选择">
-          <el-option label="Zone one" value="shanghai" />
-          <el-option label="Zone two" value="beijing" />
-        </el-select>
-      </template>
-
-    </comp-table>
   </div>
 </template>
 
 <script>
 import CompTable from '@/components/CompTable'
+import CompHeader from '@/components/CompHeader'
 import { getInfo } from '@/api/user'
 export default {
-  components: { CompTable },
+  components: { CompTable, CompHeader },
   data() {
     return {
       form: {
@@ -101,21 +89,35 @@ export default {
         pager: false,
         data: [{ age: '222', name: 'skfhgd' }, { age: '222', name: 'skfhgd' }, { age: '222', name: 'skfhgd' }],
         fieldList: [
-          { label: '姓名', value: 'name' },
-          { label: '下拉框', value: 'myslot', type: 'slot' },
-          { label: '年龄', value: 'age' }
+          { label: '编码', value: 'name' },
+          { label: '名称', value: 'myslot' }
+        ]
 
+      },
+
+      // 表格相关
+      tableInfo2: {
+        refresh: 23,
+        initTable: true,
+        initCurpage: 1,
+        pager: false,
+        data: [{ age: '222', name: 'skfhgd' }, { age: '222', name: 'skfhgd' }, { age: '222', name: 'skfhgd' }],
+        fieldList: [
+          { label: '编码', value: 'name' },
+          { label: '名称', value: 'myslot' },
+          { label: '显示顺序', value: 'myslot' },
+          { label: '状态', value: 'myslot' }
         ],
         handle: {
           fixed: 'right',
           label: '操作',
           width: '200',
           btList: [
-            { label: '选择', type: 'primary', icon: 'el-icon-ship', event: 'selectFile', show: true },
-            { label: '删除', type: 'primary', icon: 'el-icon-ship', event: 'selectFile', show: false },
-            { label: '修改', type: 'info', icon: 'el-icon-ship', event: 'selectFile', show: true }
+            { label: '编辑', type: 'primary', icon: 'el-icon-ship', event: 'selectFile', show: true },
+            { label: '删除', type: 'primary', icon: 'el-icon-ship', event: 'selectFile', show: true }
           ]
         }
+
       },
 
       // 过滤相关配置

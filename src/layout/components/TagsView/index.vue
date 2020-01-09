@@ -6,7 +6,6 @@
         ref="tag"
         :key="tag.path"
         :class="isActive(tag)?'active':''"
-        :style="isActive(tag) ? `background: ${theme}` : ''"
         :to="{ path: tag.path, query: tag.query, fullPath: tag.fullPath }"
         tag="span"
         class="tags-view-item"
@@ -204,22 +203,20 @@ export default {
   height: 34px;
   width: 100%;
   background: #fff;
-  border-bottom: 1px solid #d8dce5;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .12), 0 0 3px 0 rgba(0, 0, 0, .04);
+  // box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .12), 0 0 3px 0 rgba(0, 0, 0, .04);
   .tags-view-wrapper {
     .tags-view-item {
       display: inline-block;
       position: relative;
       cursor: pointer;
-      height: 26px;
-      line-height: 26px;
-      border: 1px solid #d8dce5;
+      height: 30px;
+      line-height: 30px;
       color: #495060;
-      background: #fff;
+      // background: #fff;
       padding: 0 8px;
       font-size: 12px;
       margin-left: 5px;
-      margin-top: 4px;
+      margin-top: 0px;
       &:first-of-type {
         margin-left: 15px;
       }
@@ -227,8 +224,8 @@ export default {
         margin-right: 15px;
       }
       &.active {
-        background-color: #42b983;
-        color: #fff;
+        background-color: #E1E3EB;
+        color: #235b94;
         border-color: #42b983;
         &::before {
           content: '';

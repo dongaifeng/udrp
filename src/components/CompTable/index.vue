@@ -211,10 +211,11 @@ export default {
       if (!this.api) return
       this.getList(this.api)
     }
-    // fullScreen() {
-    //   if (this.listenHeight) {
-    //     // 得到表格的高度
-    //     this.listInfo.tableHeight = this.getTableHeight()
+    // refresh: {
+    //   // immediate: true,
+    //   handler() {
+    //     if (!this.api) return
+    //     this.getList(this.api)
     //   }
     // }
   },
@@ -256,42 +257,31 @@ export default {
         // 每次调用接口时都自动绑定最新的数据
         api(this.handleParams())
           .then(res => {
+            debugger
             this.listInfo.loading = false
-            if (res.success) {
               // 使外面可以访问到表格数据
-              const arr = Array.isArray(res.content)
-                ? res.content
-                : res.content.result
+              const arr = res
                 // 触发update事件
               this.$emit('update:data', arr)
-              if (this.pager) {
-                this.listInfo.total = res.content.totals
-                this.listInfo.query.curPage = res.content.curPage - 0
-                this.listInfo.query.pageSize = res.content.pageSize - 0
-              }
+              // if (this.pager) {
+              //   this.listInfo.total = res.content.totals
+              //   this.listInfo.query.curPage = res.content.curPage - 0
+              //   this.listInfo.query.pageSize = res.content.pageSize - 0
+              // }
 
-              // 设置当前选中项
-              this.checkedList.forEach(selected => {
-                const row = arr.find(item => {
-                  return item.id === selected
-                })
-                this.$nextTick(() => {
-                  if (!row) return
-                  this.$refs.table.toggleRowSelection(row, true)
-                })
-              })
+              // // 设置当前选中项
+              // this.checkedList.forEach(selected => {
+              //   const row = arr.find(item => {
+              //     return item.id === selected
+              //   })
+              //   this.$nextTick(() => {
+              //     if (!row) return
+              //     this.$refs.table.toggleRowSelection(row, true)
+              //   })
+              // })
 
               resolve(res)
               this.$emit('handleEvent', 'list', arr)
-            } else {
-              this.$message({
-                showClose: true,
-                message: res.message,
-                type: 'error',
-                duration: 3500
-              })
-              reject()
-            }
           })
           .catch(() => {
             reject()

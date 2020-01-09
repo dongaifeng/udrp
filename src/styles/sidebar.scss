@@ -6,11 +6,11 @@
     margin-left: $sideBarWidth;
     position: relative;
   }
-
+// 左侧菜单容器
   .sidebar-container {
     transition: width 0.28s;
     width: $sideBarWidth !important;
-    background-color: $menuBg;
+    background: linear-gradient(#235b94,#5b9cd0, );
     height: 100%;
     position: fixed;
     font-size: 0px;
@@ -68,20 +68,25 @@
     .el-submenu__title {
       &:hover {
         background-color: $menuHover !important;
+        color: $menuTextHover !important;
       }
     }
 
     .is-active>.el-submenu__title {
       color: $subMenuActiveText !important;
+      &:hover {
+        background-color: $menuHover !important;
+        color: $menuTextHover !important;
+      }
     }
 
     & .nest-menu .el-submenu>.el-submenu__title,
     & .el-submenu .el-menu-item {
       min-width: $sideBarWidth !important;
       background-color: $subMenuBg !important;
-
       &:hover {
         background-color: $subMenuHover !important;
+        color: $menuTextHover !important;
       }
     }
   }

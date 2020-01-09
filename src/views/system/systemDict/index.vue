@@ -1,6 +1,27 @@
 <template>
   <div class="app-container">
     <el-row :gutter="20">
+      <el-col :span="8">
+        <comp-header context="系统字典类别列表" />
+        <comp-table
+          :listen-height="false"
+          :height="'60vh'"
+          :refresh="tableInfo.refresh"
+          :init-curpage="tableInfo.initCurpage"
+          :table-data.sync="tableInfo.data"
+          :check-box="false"
+          :tab-index="true"
+          :api="systemDictGetLIst"
+          :pager="true"
+          :query="filterInfo.query"
+          :field-list="tableInfo.fieldList"
+          :list-type-info="listTypeInfo"
+          :handle="tableInfo.handle"
+          @handleClick="handleClick"
+          @handleEvent="handleEvent"
+          @selectFile="handleBtnClick"
+        />
+      </el-col>
 
       <el-col :span="16">
         <comp-header context="头部信息" />
@@ -33,90 +54,44 @@
 
         </comp-table>
       </el-col>
-
-      <el-col :span="8">
-        <comp-header context="编辑" />
-        <comp-form
-          :span="23"
-          :ref-obj.sync="formInfo.ref"
-          :form-data="formInfo.data"
-          :field-list="formInfo.fieldList"
-          :rules="formInfo.rules"
-          :label-width="formInfo.labelWidth"
-          :list-type-info="listTypeInfo"
-        >
-
-          <!-- 自定义插槽的使用 -->
-          <template v-slot:form-icon>
-            <div class="slot-icon">
-              <img
-                :src="formInfo.data.icon"
-                style="height: 30px;"
-              >
-              <span v-if=" !formInfo.data.icon">暂未设置图标</span>
-              <el-button
-                type="primary"
-                icon="el-icon-picture"
-                size="mini"
-                @click="handleClick('selectFile')"
-              >
-                {{ formInfo.data.icon ? '更换图标' : '选择图标' }}
-              </el-button>
-            </div>
-          </template>
-        </comp-form>
-        <el-button @click="submit">测试连接</el-button>
-        <el-button type="primary" @click="submit">保存</el-button>
-      </el-col>
     </el-row>
 
   </div>
 </template>
 
 <script>
+import { systemDictGetLIst } from '@/api/system'
 import CompTable from '@/components/CompTable'
 import CompHeader from '@/components/CompHeader'
-import CompForm from '@/components/CompForm'
 export default {
-  components: { CompTable, CompHeader, CompForm },
+  components: { CompTable, CompHeader },
   data() {
     return {
-      // 表单相关
-      formInfo: {
-        ref: null, // 可以拿到el-form
-        data: {
-          id: '', // *唯一ID
-          name: '', // *标签名称
-          icon: '', // 图标
-          sort: '2222', // 排序
-          wikipedia: '', // 标签百科
-          status: 1 // *状态: 0：停用，1：启用(默认为1)',
-        },
-        fieldList: [
-          { label: '数据库类型', value: 'name', type: 'select' },
-          { label: '数据源类型', value: 'name', type: 'select' },
-          { label: '标签名称', value: 'name', type: 'input', hidden: true },
-          { label: '数据源名称', value: 'sort', type: 'input' },
-          { label: '服务名', value: 'sort', type: 'input' },
-          { label: '登录名', value: 'sort', type: 'input' },
-          { label: '密码', value: 'sort', type: 'input' },
-          { label: '数据库', value: 'sort', type: 'input' },
-          { label: '连接字符串', value: 'sort', type: 'textarea' }
-        ],
-        rules: {
-          name: [
-            { required: true, message: '请输入活动名称', trigger: 'blur' },
-            { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
-          ]
-        },
-        labelWidth: '120px'
+      form: {
+        name: '',
+        region: '',
+        date1: '',
+        date2: '',
+        delivery: false,
+        type: [],
+        resource: '',
+       
       },
       listTypeInfo: {
-        tagTypeList: [],
-        statusList: [
-          { key: '启用', value: 1 },
-          { key: '停用', value: 0 }
+        treeList: []
+      },
+      // 表格相关
+      tableInfo: {
+        refresh: 0,
+        initTable: true,
+        initCurpage: 1,
+        pager: false,
+        data: [],
+        fieldList: [
+          { label: '编码', value: 'DictCode' },
+          { label: '名称', value: 'DictName' }
         ]
+
       },
 
       // 表格相关
@@ -162,6 +137,10 @@ export default {
       }
     }
   },
+  mounted() {
+    this.systemDictGetLIst = systemDictGetLIst
+    this.tableInfo.refresh++
+  },
   methods: {
     onSubmit() {
       this.$message('submit!')
@@ -180,18 +159,6 @@ export default {
     },
     handleClick() {
 
-    },
-    submit(formName) {
-      console.log(this.formInfo.ref, '???<===')
-      this.formInfo.ref.validate((valid) => {
-        if (valid) {
-          alert('submit!')
-          console.log(this.formInfo.data)
-        } else {
-          console.log('error submit!!')
-          return false
-        }
-      })
     }
   }
 }
