@@ -37,7 +37,7 @@ const actions = {
         console.log(response, '<=====')
         const { UserName, UserID } = response
         // 登录成功 存储用户信息
-        commit('SET_NAME', UserName)
+        // commit('SET_NAME', UserName)
         commit('SET_USERINFO', response)
         // 模仿token
         commit('SET_TOKEN', UserID)
@@ -69,9 +69,12 @@ const actions = {
   },
 
   // user logout
-  logout({ commit, state }) {
+  logout({ commit, state, dispatch }) {
     return new Promise((resolve, reject) => {
+      
       commit('SET_TOKEN', '')
+      commit('SET_NAME', '')
+      commit('SET_USERINFO', {})
       removeToken()
       resetRouter()
       resolve()
@@ -82,6 +85,7 @@ const actions = {
   resetToken({ commit }) {
     return new Promise(resolve => {
       commit('SET_TOKEN', '')
+      commit('SET_NAME', '')
       commit('SET_ROLES', [])
       removeToken()
       resolve()

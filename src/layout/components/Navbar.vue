@@ -17,20 +17,20 @@
 
         <el-tooltip content="修改密码" effect="dark" placement="bottom"  >
           <div class="right-menu-item hover-effect" @click="dialogUpdatePwd = true">
-             <svg-icon iconClass="lock" />
+             <svg-icon :iconClass="'lock'" />
             修改密码</div>
         </el-tooltip>
 
         <el-tooltip content="退出登录" effect="dark" placement="bottom">
           <div class="right-menu-item hover-effect" @click="logout">
-             <svg-icon iconClass="switch" />
+             <svg-icon :iconClass="'switch'" />
             退出登录</div>
         </el-tooltip>
 
       </template>
 
       <!-- 头像 -->
-      <el-dropdown v-if='0' class="avatar-container right-menu-item hover-effect" trigger="hover">
+      <el-dropdown v-if='false' class="avatar-container right-menu-item hover-effect" trigger="hover">
         <div class="avatar-wrapper">
           <!-- 添加用名名称 -->
           <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
@@ -84,15 +84,15 @@
 import { mapGetters } from 'vuex'
 // import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
-import ThemePicker from '@/components/ThemePicker'
+// import ThemePicker from '@/components/ThemePicker'
 import { apiUpdatePwd } from '@/api/user'
 import { validatePassword } from '@/utils/validate'
 
 export default {
   components: {
     // Breadcrumb,
-    Hamburger,
-    ThemePicker
+    Hamburger
+    // ThemePicker
   },
   data() {
     const validateRpNewPwd = (rule, value, callback) => {
@@ -134,6 +134,7 @@ export default {
     },
     async logout() {
       await this.$store.dispatch('user/logout')
+      // window.location.reload()
       this.$router.push(`/login?redirect=${this.$route.fullPath}`)
     },
     // updatePwd() {

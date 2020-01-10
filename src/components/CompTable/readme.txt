@@ -4,7 +4,7 @@
       :refresh="tableInfo.refresh"  改变这个值 刷新表格数据
       :init-curpage="tableInfo.initCurpage"  改变这个值 返回第一页
       :data.sync="tableInfo.data"  //  表格的数据
-      :api="handleEvent"  // 请求接口
+      :api="handleEvent"  // 请求接口  这个接口必须在data里声明或者mounted时候挂载
       :pager="true" 
       :query="filterInfo.query"
       :field-list="tableInfo.fieldList"  //  每列的选项

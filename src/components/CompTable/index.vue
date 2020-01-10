@@ -6,7 +6,7 @@
       v-loading="listInfo.loading"
       :max-height="listInfo.tableHeight || undefined"
       :height="height"
-      :data="tableData"
+      :data="data"
       border
       style="width:100%"
     >
@@ -174,7 +174,7 @@ export default {
       }
     },
     // 列表数据
-    tableData: {
+    data: {
       type: Array
     },
     // 监听高度
@@ -257,35 +257,31 @@ export default {
         // 每次调用接口时都自动绑定最新的数据
         api(this.handleParams())
           .then(res => {
-            debugger
+            // debugger
             this.listInfo.loading = false
-              // 使外面可以访问到表格数据
-              const arr = res
-                // 触发update事件
-              this.$emit('update:data', arr)
-              // if (this.pager) {
-              //   this.listInfo.total = res.content.totals
-              //   this.listInfo.query.curPage = res.content.curPage - 0
-              //   this.listInfo.query.pageSize = res.content.pageSize - 0
-              // }
+            // 使外面可以访问到表格数据
+            const arr = res
+            // 触发update事件
+            this.$emit('update:data', arr)
+            if (this.pager) {
+              this.listInfo.total = res.content.totals
+              this.listInfo.query.curPage = res.content.curPage - 0
+              this.listInfo.query.pageSize = res.content.pageSize - 0
+            }
 
-              // // 设置当前选中项
-              // this.checkedList.forEach(selected => {
-              //   const row = arr.find(item => {
-              //     return item.id === selected
-              //   })
-              //   this.$nextTick(() => {
-              //     if (!row) return
-              //     this.$refs.table.toggleRowSelection(row, true)
-              //   })
-              // })
+            // 设置当前选中项
+            this.checkedList.forEach(selected => {
+              const row = arr.find(item => {
+                return item.id === selected
+              })
+              this.$nextTick(() => {
+                if (!row) return
+                this.$refs.table.toggleRowSelection(row, true)
+              })
+            })
 
-              resolve(res)
-              this.$emit('handleEvent', 'list', arr)
-          })
-          .catch(() => {
-            reject()
-            this.listInfo.loading = false
+            resolve(res)
+            this.$emit('handleEvent', 'list', arr)
           })
       })
     },

@@ -8,11 +8,11 @@
           :height="'60vh'"
           :refresh="tableInfo.refresh"
           :init-curpage="tableInfo.initCurpage"
-          :table-data.sync="tableInfo.data"
+          :data.sync="tableInfo.data"
           :check-box="false"
           :tab-index="true"
           :api="systemDictGetLIst"
-          :pager="true"
+          :pager="false"
           :query="filterInfo.query"
           :field-list="tableInfo.fieldList"
           :list-type-info="listTypeInfo"
@@ -67,6 +67,7 @@ export default {
   components: { CompTable, CompHeader },
   data() {
     return {
+      systemDictGetLIst,
       form: {
         name: '',
         region: '',
@@ -74,8 +75,7 @@ export default {
         date2: '',
         delivery: false,
         type: [],
-        resource: '',
-       
+        resource: ''
       },
       listTypeInfo: {
         treeList: []
@@ -138,8 +138,8 @@ export default {
     }
   },
   mounted() {
-    this.systemDictGetLIst = systemDictGetLIst
-    this.tableInfo.refresh++
+    // this.systemDictGetLIst = systemDictGetLIst
+    this.tableInfo.refresh = Math.random()
   },
   methods: {
     onSubmit() {
@@ -155,7 +155,9 @@ export default {
       console.log('data', data)
     },
     handleEvent() {
-
+      switch (event) {
+        case 'list':
+      }
     },
     handleClick() {
 
