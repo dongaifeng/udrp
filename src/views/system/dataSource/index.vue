@@ -1,27 +1,27 @@
 <template>
   <div class="app-container">
     <el-row :gutter="20">
-
+      <el-col style="margin-bottom: 10px;">
+        <el-button type="primary">新建</el-button>
+        <el-checkbox v-model="tableInfo.query.ShowEnabled">显示禁用</el-checkbox>
+      </el-col>
       <el-col :span="16">
-        <comp-header context="头部信息" />
         <!-- 表格 -->
         <comp-table
           :listen-height="false"
-          :height="'60vh'"
-          :refresh="tableInfo2.refresh"
-          :init-curpage="tableInfo2.initCurpage"
-          :table-data.sync="tableInfo2.data"
-          :check-box="true"
-          :tab-index="true"
-          :api="handleEvent"
-          :pager="true"
-          :query="filterInfo.query"
-          :field-list="tableInfo2.fieldList"
-          :list-type-info="listTypeInfo"
-          :handle="tableInfo2.handle"
+          :height="'calc(100vh - 180px)'"
+          :refresh="tableInfo.refresh"
+          :init-curpage="tableInfo.initCurpage"
+          :data.sync="tableInfo.data"
+          :check-box="false"
+          :api="DataSourcesGetList"
+          :pager="false"
+          :query="form"
+          :field-list="tableInfo.fieldList"
+          :list-type-info="selects"
+          :handle="tableInfo.handle"
           @handleClick="handleClick"
           @handleEvent="handleEvent"
-          @selectFile="handleBtnClick"
         >
           <!-- 自定义插槽显示状态 -->
           <template v-slot:col-myslot="scope">
@@ -30,7 +30,6 @@
               <el-option label="Zone two" value="beijing" />
             </el-select>
           </template>
-
         </comp-table>
       </el-col>
 
@@ -43,33 +42,14 @@
           :field-list="formInfo.fieldList"
           :rules="formInfo.rules"
           :label-width="formInfo.labelWidth"
-          :list-type-info="listTypeInfo"
+          :list-type-info="selects"
         >
-
           <!-- 自定义插槽的使用 -->
-          <template v-slot:form-icon>
-            <div class="slot-icon">
-              <img
-                :src="formInfo.data.icon"
-                style="height: 30px;"
-              >
-              <span v-if=" !formInfo.data.icon">暂未设置图标</span>
-              <el-button
-                type="primary"
-                icon="el-icon-picture"
-                size="mini"
-                @click="handleClick('selectFile')"
-              >
-                {{ formInfo.data.icon ? '更换图标' : '选择图标' }}
-              </el-button>
-            </div>
-          </template>
         </comp-form>
-        <el-button @click="submit">测试连接</el-button>
-        <el-button type="primary" @click="submit">保存</el-button>
+        <el-button>测试连接</el-button>
+        <el-button type="primary" @click="DataSourcesAddModels">保存</el-button>
       </el-col>
     </el-row>
-
   </div>
 </template>
 
@@ -77,94 +57,131 @@
 import CompTable from '@/components/CompTable'
 import CompHeader from '@/components/CompHeader'
 import CompForm from '@/components/CompForm'
+import { DataSourcesGetList, DataSourcesAddModels } from '@/api/system'
 export default {
   components: { CompTable, CompHeader, CompForm },
   data() {
     return {
+      DataSourcesGetList,
+      selects: {
+        DataBaseType: [],
+        DataSourcesType: []
+      },
       // 表单相关
       formInfo: {
         ref: null, // 可以拿到el-form
-        data: {
-          id: '', // *唯一ID
-          name: '', // *标签名称
-          icon: '', // 图标
-          sort: '2222', // 排序
-          wikipedia: '', // 标签百科
-          status: 1 // *状态: 0：停用，1：启用(默认为1)',
-        },
+        data: {},
         fieldList: [
-          { label: '数据库类型', value: 'name', type: 'select' },
-          { label: '数据源类型', value: 'name', type: 'select' },
-          { label: '标签名称', value: 'name', type: 'input', hidden: true },
-          { label: '数据源名称', value: 'sort', type: 'input' },
-          { label: '服务名', value: 'sort', type: 'input' },
-          { label: '登录名', value: 'sort', type: 'input' },
-          { label: '密码', value: 'sort', type: 'input' },
-          { label: '数据库', value: 'sort', type: 'input' },
-          { label: '连接字符串', value: 'sort', type: 'textarea' }
+          {
+            label: '数据库类型',
+            value: 'DbTypeCode',
+            type: 'select',
+            list: 'DataBaseType'
+          },
+          {
+            label: '数据源类型',
+            value: 'DataSourceType',
+            type: 'select',
+            list: 'DataSourcesType'
+          },
+          { label: '数据源名称', value: 'DataSourceName', type: 'input' },
+          { label: '服务名', value: 'ServerName', type: 'input' },
+          { label: '登录名', value: 'Login', type: 'input' },
+          { label: '密码', value: 'Password', type: 'input' },
+          { label: '数据库', value: 'Database', type: 'input' },
+          { label: '连接字符串', value: 'StrConnection', type: 'textarea' }
         ],
         rules: {
-          name: [
-            { required: true, message: '请输入活动名称', trigger: 'blur' },
-            { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
+          DbTypeCode: [
+            { required: true, message: '请输入活动名称', trigger: 'blur' }
+          ],
+          DataSourceType: [
+            { required: true, message: '请输入活动名称', trigger: 'blur' }
+          ],
+          DataSourceName: [
+            { required: true, message: '请输入活动名称', trigger: 'blur' }
+          ],
+          ServerName: [
+            { required: true, message: '请输入活动名称', trigger: 'blur' }
+          ],
+          Login: [
+            { required: true, message: '请输入活动名称', trigger: 'blur' }
+          ],
+          Password: [
+            { required: true, message: '请输入活动名称', trigger: 'blur' }
+          ],
+          Database: [
+            { required: true, message: '请输入活动名称', trigger: 'blur' }
+          ],
+          StrConnection: [
+            { required: true, message: '请输入活动名称', trigger: 'blur' }
           ]
-        },
-        labelWidth: '120px'
-      },
-      listTypeInfo: {
-        tagTypeList: [],
-        statusList: [
-          { key: '启用', value: 1 },
-          { key: '停用', value: 0 }
-        ]
+        }
       },
 
       // 表格相关
-      tableInfo2: {
-        refresh: 23,
+      tableInfo: {
+        refresh: 0,
+        query: {
+          ShowEnabled: true
+        },
         initTable: true,
         initCurpage: 1,
         pager: false,
-        data: [{ age: '222', name: 'skfhgd' }, { age: '222', name: 'skfhgd' }, { age: '222', name: 'skfhgd' }],
+        data: [],
         fieldList: [
-          { label: '编码', value: 'name' },
-          { label: '名称', value: 'myslot' },
-          { label: '显示顺序', value: 'myslot' },
-          { label: '状态', value: 'myslot' }
+          { label: 'ID', value: 'DataSourceId' },
+          { label: '数据源名称', value: 'DataSourceName' },
+          { label: '数据源类型', value: 'DbTypeName' },
+          { label: '连接字符串', value: 'StrConnection' }
         ],
         handle: {
           fixed: 'right',
           label: '操作',
           width: '200',
           btList: [
-            { label: '编辑', type: 'primary', icon: 'el-icon-ship', event: 'selectFile', show: true },
-            { label: '删除', type: 'primary', icon: 'el-icon-ship', event: 'selectFile', show: true }
+            {
+              label: '删除',
+              type: 'primary',
+              icon: 'el-icon-ship',
+              event: 'selectFile',
+              show: true
+            }
           ]
         }
-
-      },
-
-      // 过滤相关配置
-      filterInfo: {
-        query: {
-          name: '',
-          suffix: '',
-          f_id: '',
-          type: this.type
-        },
-        list: [
-          { type: 'input', label: '名称', value: 'name' },
-          // {type: 'input', label: initType(this.type) + '类型', value: 'suffix'},
-          { type: 'select', label: '所在目录', value: 'f_id', list: 'treeList' },
-          // {type: 'date', label: '创建时间', value: 'create_time'},
-          { type: 'button', label: '搜索', btType: 'primary', icon: 'el-icon-search', event: 'search', show: true }
-        ]
       }
     }
   },
+  mounted() {
+    this.updateTable()
+    this.initSelect()
+  },
   methods: {
-    onSubmit() {
-      this.$message('submit!')
+    async initSelect() {
+      this.selects.DataBaseType = await this.$store.dispatch(
+        'select/GetSelect',
+        'DataBaseType'
+      )
+      this.selects.DataSourcesType = await this.$store.dispatch(
+        'select/GetSelect',
+        'DataSourcesType'
+      )
+    },
+    DataSourcesAddModels(formName) {
+      this.formInfo.ref.validate(valid => {
+        if (valid) {
+          DataSourcesAddModels(this.formInfo.data).then(res => {
+            this.$message({
+              message: '保存成功!',
+              type: 'success'
+            })
+          })
+        }
+      })
+    },
+
+    updateTable() {
+      this.tableInfo.refresh = Math.random()
     },
     onCancel() {
       this.$message({
@@ -175,31 +192,14 @@ export default {
     handleBtnClick(data) {
       console.log('data', data)
     },
-    handleEvent() {
-
-    },
-    handleClick() {
-
-    },
-    submit(formName) {
-      console.log(this.formInfo.ref, '???<===')
-      this.formInfo.ref.validate((valid) => {
-        if (valid) {
-          alert('submit!')
-          console.log(this.formInfo.data)
-        } else {
-          console.log('error submit!!')
-          return false
-        }
-      })
-    }
+    handleEvent() {},
+    handleClick() {}
   }
 }
 </script>
 
 <style scoped>
-.line{
+.line {
   text-align: center;
 }
 </style>
-

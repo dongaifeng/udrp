@@ -5,7 +5,7 @@
         <comp-header context="系统字典类别列表" />
         <comp-table
           :listen-height="false"
-          :height="'60vh'"
+          :height="'calc(100vh - 180px)'"
           :refresh="tableInfo.refresh"
           :init-curpage="tableInfo.initCurpage"
           :data.sync="tableInfo.data"
@@ -17,25 +17,27 @@
           :field-list="tableInfo.fieldList"
           :list-type-info="listTypeInfo"
           :handle="tableInfo.handle"
+          highlight-current-row
           @handleClick="handleClick"
           @handleEvent="handleEvent"
           @selectFile="handleBtnClick"
+          @el-current-change="handleCurrentChange"
         />
       </el-col>
 
       <el-col :span="16">
-        <comp-header context="头部信息" />
+        <comp-header context="系统字典成员列表" />
         <!-- 表格 -->
         <comp-table
           :listen-height="false"
-          :height="'60vh'"
+          :height="'calc(100vh - 180px)'"
           :refresh="tableInfo2.refresh"
           :init-curpage="tableInfo2.initCurpage"
-          :table-data.sync="tableInfo2.data"
-          :check-box="true"
+          :data.sync="tableInfo2.data"
+          :check-box="false"
           :tab-index="true"
-          :api="handleEvent"
-          :pager="true"
+          :api="systemDictGetMemberList"
+          :pager="false"
           :query="filterInfo.query"
           :field-list="tableInfo2.fieldList"
           :list-type-info="listTypeInfo"
@@ -45,22 +47,14 @@
           @selectFile="handleBtnClick"
         >
           <!-- 自定义插槽显示状态 -->
-          <template v-slot:col-myslot="scope">
-            <el-select v-model="form.region" placeholder="请选择">
-              <el-option label="Zone one" value="shanghai" />
-              <el-option label="Zone two" value="beijing" />
-            </el-select>
-          </template>
-
         </comp-table>
       </el-col>
     </el-row>
-
   </div>
 </template>
 
 <script>
-import { systemDictGetLIst } from '@/api/system'
+import { systemDictGetLIst, systemDictGetMemberList } from '@/api/system'
 import CompTable from '@/components/CompTable'
 import CompHeader from '@/components/CompHeader'
 export default {
@@ -68,19 +62,12 @@ export default {
   data() {
     return {
       systemDictGetLIst,
-      form: {
-        name: '',
-        region: '',
-        date1: '',
-        date2: '',
-        delivery: false,
-        type: [],
-        resource: ''
-      },
+      systemDictGetMemberList,
+
       listTypeInfo: {
         treeList: []
       },
-      // 表格相关
+      // 表格1
       tableInfo: {
         refresh: 0,
         initTable: true,
@@ -91,83 +78,95 @@ export default {
           { label: '编码', value: 'DictCode' },
           { label: '名称', value: 'DictName' }
         ]
-
       },
 
-      // 表格相关
+      // 表格2
       tableInfo2: {
-        refresh: 23,
+        refresh: 0,
         initTable: true,
         initCurpage: 1,
         pager: false,
-        data: [{ age: '222', name: 'skfhgd' }, { age: '222', name: 'skfhgd' }, { age: '222', name: 'skfhgd' }],
+        data: [],
         fieldList: [
-          { label: '编码', value: 'name' },
-          { label: '名称', value: 'myslot' },
-          { label: '显示顺序', value: 'myslot' },
-          { label: '状态', value: 'myslot' }
+          { label: '编码', value: 'ClassCode' },
+          { label: '名称', value: 'ClassName' },
+          { label: '显示顺序', value: 'Sort' },
+          {
+            label: '状态',
+            value: 'IsEnabled',
+            type: 'state',
+            list: [{ 0: '启用' }, { 1: '禁用' }]
+          }
         ],
         handle: {
           fixed: 'right',
           label: '操作',
           width: '200',
           btList: [
-            { label: '编辑', type: 'primary', icon: 'el-icon-ship', event: 'selectFile', show: true },
-            { label: '删除', type: 'primary', icon: 'el-icon-ship', event: 'selectFile', show: true }
+            {
+              label: '编辑',
+              type: 'primary',
+              icon: 'el-icon-ship',
+              event: 'selectFile',
+              show: true
+            },
+            {
+              label: '删除',
+              type: 'primary',
+              icon: 'el-icon-ship',
+              event: 'selectFile',
+              show: true
+            }
           ]
         }
-
       },
 
       // 过滤相关配置
       filterInfo: {
         query: {
-          name: '',
-          suffix: '',
-          f_id: '',
-          type: this.type
-        },
-        list: [
-          { type: 'input', label: '名称', value: 'name' },
-          // {type: 'input', label: initType(this.type) + '类型', value: 'suffix'},
-          { type: 'select', label: '所在目录', value: 'f_id', list: 'treeList' },
-          // {type: 'date', label: '创建时间', value: 'create_time'},
-          { type: 'button', label: '搜索', btType: 'primary', icon: 'el-icon-search', event: 'search', show: true }
-        ]
+          DictCode: ''
+        }
       }
     }
   },
   mounted() {
-    // this.systemDictGetLIst = systemDictGetLIst
-    this.tableInfo.refresh = Math.random()
+    this.updateTable(1)
   },
   methods: {
-    onSubmit() {
-      this.$message('submit!')
+    updateTable(ref) {
+      switch (ref) {
+        case 1:
+          this.tableInfo.refresh = Math.random()
+          break
+        case 2:
+          this.tableInfo2.refresh = Math.random()
+          break
+      }
     },
-    onCancel() {
-      this.$message({
-        message: 'cancel!',
-        type: 'warning'
-      })
+
+    handleCurrentChange(row) {
+      this.filterInfo.query.DictCode = row.DictCode
+      this.updateTable(2)
     },
+
     handleBtnClick(data) {
       console.log('data', data)
     },
-    handleEvent() {
+    handleEvent(event, data) {
       switch (event) {
         case 'list':
+          console.log(data)
       }
     },
-    handleClick() {
-
+    handleClick(a) {
+      console.log(a)
     }
   }
 }
 </script>
 
 <style scoped>
-.line{
+.line {
   text-align: center;
 }
 </style>

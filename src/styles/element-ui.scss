@@ -50,3 +50,11 @@
 .el-select{
   width: 100%;
 }
+
+.no-padding .el-dialog__body {
+  padding: 0px !important;
+}
+
+.el-date-editor.el-input, .el-date-editor.el-input__inner {
+  width: 100% !important;
+}

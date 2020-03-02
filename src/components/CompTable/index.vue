@@ -8,6 +8,7 @@
       :height="height"
       :data="data"
       border
+      :highlight-current-row="highlightCurrentRow"
       style="width:100%"
     >
       <!-- 复选框列 -->
@@ -34,6 +35,7 @@
         :label="item.label"
         :fixed="item.fixed"
         align="center"
+        show-overflow-tooltip
         :width="item.width"
         :min-width="item.minWidth || '100px'"
       >
@@ -42,6 +44,7 @@
           <template v-if="item.type === 'slot'">
             <slot :name="'col-' + item.value" :row="scope.row" />
           </template>
+
           <!-- 嵌套表格 -->
           <template v-if="item.children">
             <el-table-column
@@ -54,8 +57,27 @@
               :min-width="item.minWidth || '85px'"
             />
           </template>
+
           <!-- 标签 -->
           <el-tag v-else-if="item.type === 'tag'">{{ scope.row[item.value] }}</el-tag>
+
+          <!-- 图片 -->
+          <img
+            v-else-if="item.type === 'image' && scope.row[item.value]"
+            v-imgAlart
+            height="50px"
+            :src="scope.row[item.value]"
+          >
+
+          <!-- 状态 -->
+          <span v-else-if="item.type === 'state'">
+            {{ item.list[scope.row[item.value]] }}
+          </span>
+
+          <!-- 其他 -->
+          <span v-else-if="item.type === 'tag'">
+            {{ scope.row[item.value] }}
+          </span>
 
         </template>
       </el-table-column>
@@ -73,16 +95,29 @@
           <template v-for="(item, index) in handle.btList">
             <!-- 自定义操作类型 -->
             <slot v-if="item.slot" :name="'bt-' + item.event" :data="{item, row: scope.row}" />
-            <!-- 操作按钮 -->
+            <!-- 根据本项目需求对删除按钮特殊处理 -->
             <el-button
-              v-if="!item.slot && item.show && (!item.ifRender || item.ifRender(scope.row))"
+              v-if="!item.slot && item.show && (!item.ifRender || item.ifRender(scope.row)) && item.label==='删除'"
               :key="index"
-              :type="item.type"
+              :type="scope.row.DeleteFlag ? 'primary' : 'danger'"
               :icon="item.icon"
               :disabled="item.disabled"
               :loading="scope.row[item.loading]"
-              @click="handleBtnClick(item.event, scope.row)"
+              @click="handleClick(item.event, scope.row)"
+            >{{ scope.row.DeleteFlag ? '恢复': '删除' }}</el-button>
+
+            <!-- 操作按钮 -->
+            <!-- 根据本项目需求对编辑按钮的disabled特殊处理 -->
+            <el-button
+              v-if="!item.slot && item.show && (!item.ifRender || item.ifRender(scope.row)) && item.label !='删除'"
+              :key="index"
+              :type="item.type"
+              :icon="item.icon"
+              :disabled=" item.label==='编辑' ? Boolean(scope.row.DeleteFlag) : item.disabled"
+              :loading="scope.row[item.loading]"
+              @click="handleClick(item.event, scope.row)"
             >{{ item.label }}</el-button>
+
           </template>
         </template>
       </el-table-column>
@@ -109,8 +144,9 @@
 <script>
 import { mapGetters } from 'vuex'
 export default {
-  name: 'PageTable',
+  name: 'TableComponent',
   props: {
+    highlightCurrentRow: [Boolean],
     height: [String, Number],
     // 自定义类名
     className: {
@@ -252,37 +288,36 @@ export default {
     },
     // 得到数据
     getList(api) {
-      this.listInfo.loading = true
+      // this.listInfo.loading = true
       return new Promise((resolve, reject) => {
         // 每次调用接口时都自动绑定最新的数据
-        api(this.handleParams())
-          .then(res => {
-            // debugger
-            this.listInfo.loading = false
-            // 使外面可以访问到表格数据
-            const arr = res
-            // 触发update事件
-            this.$emit('update:data', arr)
-            if (this.pager) {
-              this.listInfo.total = res.content.totals
-              this.listInfo.query.curPage = res.content.curPage - 0
-              this.listInfo.query.pageSize = res.content.pageSize - 0
-            }
+        api(this.handleParams()).then(res => {
+          // debugger
+          this.listInfo.loading = false
+          // 使外面可以访问到表格数据
+          const { currPage = 1, dataList = [], totalCount, totalPages } = res
+          // 触发update事件 prop的 async方法  去更新props的data属性
+          this.$emit('update:data', dataList)
+          if (this.pager) {
+            this.listInfo.total = totalCount
+            this.listInfo.query.curPage = currPage - 0
+            this.listInfo.query.pageSize = Math.floor(totalCount / totalPages)
+          }
 
-            // 设置当前选中项
-            this.checkedList.forEach(selected => {
-              const row = arr.find(item => {
-                return item.id === selected
-              })
-              this.$nextTick(() => {
-                if (!row) return
-                this.$refs.table.toggleRowSelection(row, true)
-              })
+          // 设置当前选中项
+          this.checkedList.forEach(selected => {
+            const row = dataList.find(item => {
+              return item.id === selected
             })
-
-            resolve(res)
-            this.$emit('handleEvent', 'list', arr)
+            this.$nextTick(() => {
+              if (!row) return
+              this.$refs.table.toggleRowSelection(row, true)
+            })
           })
+
+          resolve(res)
+          this.$emit('handleEvent', 'list', dataList)
+        })
       })
     },
     handleSizeChange(val) {
@@ -299,14 +334,10 @@ export default {
     handleClick(event, data) {
       this.$emit('handleClick', event, data)
     },
-    // 把表格里的按钮点击事件脱离出来
-    handleBtnClick(event, data) {
-      this.$emit(event, data)
-    },
     // 选中数据
-    // handleSelectionChange(rows) {
-    //   this.$emit('handleEvent', 'tableCheck', rows)
-    // },
+    handleSelectionChange(rows) {
+      this.$emit('handleEvent', 'tableCheck', rows)
+    },
     // 根据页面的头部, 功能框, 分页组件等高度，计算出table的高度
     getTableHeight() {
       // 当表格存在的时候才执行操作

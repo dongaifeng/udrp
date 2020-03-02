@@ -34,14 +34,13 @@ const actions = {
     const { username, password } = userInfo
     return new Promise((resolve, reject) => {
       login({ username: username.trim(), password: password }).then(response => {
-        console.log(response, '<=====')
-        const { UserName, UserID } = response
+        const { UserName, UserID, F_token } = response
+        console.log(response, UserName, UserID, '<=====')
         // 登录成功 存储用户信息
         // commit('SET_NAME', UserName)
         commit('SET_USERINFO', response)
-        // 模仿token
-        commit('SET_TOKEN', UserID)
-        setToken(UserID)
+        commit('SET_TOKEN', F_token)
+        setToken(F_token)
         resolve()
       }).catch(error => {
         reject(error)
@@ -52,7 +51,7 @@ const actions = {
   // 获取用户信息
   getInfo({ commit, state }) {
     return new Promise((resolve, reject) => {
-      getInfo({ UserID: state.token }).then(response => {
+      getInfo({ UserID: '1' }).then(response => {
         const userInfo = response
         if (!userInfo) {
           reject('没有用户信息，请重新登录')
@@ -71,7 +70,6 @@ const actions = {
   // user logout
   logout({ commit, state, dispatch }) {
     return new Promise((resolve, reject) => {
-      
       commit('SET_TOKEN', '')
       commit('SET_NAME', '')
       commit('SET_USERINFO', {})

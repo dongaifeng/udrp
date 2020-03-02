@@ -8,7 +8,7 @@
     :label-width="labelWidth"
   >
     <el-row>
-      <el-col v-for="(item, index) in fieldList.filter(item => !item.hidden) " :key="index" :span="span">
+      <el-col v-for="(item, index) in fieldList.filter(item => !item.hidden) " :key="index" :span="item.span || span">
         <el-form-item
           :prop="item.value"
           :label="item.label"
@@ -38,6 +38,14 @@
             :autosize="item.autosize || {minRows: 2, maxRows: 10}"
             @focus="handleEvent(item.event)"
           />
+          <!-- 复选框 -->
+          <el-checkbox
+            v-if="item.type === 'checkbox'"
+            v-model.trim="formData[item.value]"
+            :disabled="item.disabled"
+            @change="handleEvent(item.event, formData[item.value])"
+          />
+
           <!-- 计数器 -->
           <el-input-number
             v-if="item.type === 'inputNumber'"
@@ -45,7 +53,7 @@
             size="small"
             :min="item.min"
             :max="item.max"
-            @change="handleEvent(item.event)"
+            @change="handleEvent(item.event, formData[item.value])"
           />
           <!-- 选择框 -->
           <el-select
@@ -60,8 +68,8 @@
             <el-option
               v-for="(childItem, childIndex) in listTypeInfo[item.list]"
               :key="childIndex"
-              :label="childItem.key"
-              :value="childItem.value"
+              :label="childItem.ClassName"
+              :value="childItem.ClassCode"
             />
           </el-select>
           <!-- 日期选择框 -->
@@ -158,8 +166,8 @@ export default {
       return placeholder
     },
     // 绑定的相关事件
-    handleEvent(evnet) {
-      this.$emit('handleEvent', evnet)
+    handleEvent(event, data) {
+      this.$emit('handleEvent', event, data)
     },
     // 派发按钮点击事件
     handleClick(event, data) {

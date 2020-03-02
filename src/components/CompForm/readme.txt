@@ -10,7 +10,8 @@
 
      // 表单相关
       formInfo: {
-        ref: null, // 可以拿到el-form
+        ref: null, // 可以拿到el-form  直接写成null就行
+        
         data: {  // 表单的数据model
           id: '', 
         },
@@ -33,3 +34,4 @@
         type： 类型 input，select， textarea，inputNumber，date，slot为自定义项目，设置v-slot=form加slot的这一项设置的value
         calssName
         hidden
+        event: 指定事件  可以在 handleEvent获取到你指定的事件 然后判断事件来处理

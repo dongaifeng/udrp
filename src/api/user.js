@@ -7,7 +7,8 @@ export function login(data) {
     method: 'post',
     data: {
       UserName: data.username,
-      UserPassword: data.password
+      UserPassword: data.password,
+      FunCode: 'UDRP', SystemCode: '125'
     }
   })
 }

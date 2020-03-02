@@ -15,6 +15,11 @@ import router from './router'
 import '@/icons' // icon
 import '@/permission' // permission control
 
+const pinyin = require('js-pinyin')
+pinyin.setOptions({ checkPolyphone: false, charCase: 0 })
+
+Vue.prototype.$py = pinyin
+
 /**
  * If you don't want to use mock-server
  * you want to use MockJs for mock api

@@ -50,7 +50,7 @@ const mutations = {
 const actions = {
   async generateRoutes({ commit }, data) {
     // 从后台加载路由表
-    const { menuData } = await getRoute(data)
+    const { menuData } = await getRoute({ ...data, IsAdmin: true, SystemCode: '125' })
     return new Promise(resolve => {
       let accessedRoutes
       if (menuData) {

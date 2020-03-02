@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-container">
-    
+
     <div class="panel-group">
       <div v-for="item in 4" :key="item" class="card-panel-col">
         <panel-group @handleSetLineChartData="handleSetLineChartData" />
@@ -23,6 +23,7 @@
 import LineChart from './components/LineChart'
 import PanelGroup from './components/PanelGroup.vue'
 import BarChart from './components/BarChart.vue'
+
 const lineChartData = {
   newVisitis: {
     expectedData: [100, 120, 161, 134, 105, 160, 165],
@@ -54,6 +55,7 @@ export default {
       lineChartData: lineChartData.newVisitis
     }
   },
+
   methods: {
     handleSetLineChartData(type) {
       this.lineChartData = lineChartData[type]
