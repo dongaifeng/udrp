@@ -166,6 +166,14 @@ export default {
     },
     ServiceId() {
       return this.$store.getters.ServiceId
+    },
+    toPy() {
+      return this.addForm.ContentShowName
+    }
+  },
+  watch: {
+    toPy: function(newVal) {
+      this.addForm.Py = this.$py.getCamelChars(newVal)
     }
   },
   mounted() {

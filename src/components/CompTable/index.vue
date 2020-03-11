@@ -198,6 +198,11 @@ export default {
       type: Boolean,
       default: true
     },
+    // 表头是否动态
+    autoHeader: {
+      type: Boolean,
+      default: false
+    },
     // 重置当前页
     initCurpage: {
       type: Number
@@ -295,9 +300,16 @@ export default {
           // debugger
           this.listInfo.loading = false
           // 使外面可以访问到表格数据
-          const { currPage = 1, dataList = [], totalCount, totalPages } = res
+          const { currPage = 1, dataList = [], totalCount, totalPages, TabHeard } = res
           // 触发update事件 prop的 async方法  去更新props的data属性
           this.$emit('update:data', dataList)
+
+          // 表头为动态时 回传表头信息
+          if (this.autoHeader) {
+            const header = TabHeard.map(item => ({ label: item.DataItemName, value: item.DataItemCode }))
+            this.$emit('update:fieldList', header)
+          }
+
           if (this.pager) {
             this.listInfo.total = totalCount
             this.listInfo.query.curPage = currPage - 0

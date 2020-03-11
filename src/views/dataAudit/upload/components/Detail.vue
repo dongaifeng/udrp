@@ -1,36 +1,24 @@
 <template>
   <div>
-    <el-row>
-      <el-col :span="12">
-        <CompForm
-          :ref-obj.sync="formInfo.ref"
-          :form-data="formInfo.data"
-          :field-list="formInfo.fieldList"
-          :label-width="formInfo.labelWidth"
-          :list-type-info="listTypeInfo"
-          :span="24"
-          :rules="formInfo.rules"
-        >
-          <!-- 自定义插槽的使用 -->
-          <template v-slot:form-IsEnabled>
-            <el-checkbox v-model="formInfo.data.IsEnabled" />
-          </template>
-        </CompForm>
-      </el-col>
-      <el-col :span="12">
-        <el-form label-width="120px" :model="formInfo.data">
-          <el-form-item label="活动名称">
-            <el-input
-              v-model="formInfo.data.ProjectDesc"
-              type="textarea"
-              rows="24"
-              placeholder="请输入内容"
-              label="请输入内容"
-            />
-          </el-form-item>
-        </el-form>
-      </el-col>
-    </el-row>
+    <CompHeader context="详情">
+      <template v-slot:right>
+        <el-button type="primary">保存设置</el-button>
+      </template>
+    </CompHeader>
+
+    <CompForm
+      :ref-obj.sync="formInfo.ref"
+      :form-data="formInfo.data"
+      :field-list="formInfo.fieldList"
+      :label-width="formInfo.labelWidth"
+      :list-type-info="listTypeInfo"
+      :span="24"
+      :rules="formInfo.rules"
+    >
+      <!-- 自定义插槽的使用 -->
+
+    </CompForm>
+
     <el-row type="flex" justify="center">
       <el-button type="primary" @click="addProject">保存</el-button>
     </el-row>
@@ -47,7 +35,11 @@ export default {
     return {
       listTypeInfo: {
         GetProjects: [],
-        OutPutType: []
+        OutPutType: [],
+        statusList: [
+          { key: '启用', value: 1 },
+          { key: '停用', value: 0 }
+        ]
       },
       formInfo: {
         ref: null,
@@ -58,8 +50,8 @@ export default {
           IsEnabled: true
         },
         fieldList: [
-          { label: '上报机构', value: 'ProjectCode', type: 'select', list: 'GetProjects', required: true },
-          { label: '项目编码', value: 'ReportOrganCode', type: 'input', required: true },
+          { label: '上报机构', value: 'ProjectCode', type: 'select', list: 'GetProjects' },
+          { label: '项目编码', value: 'ReportOrganCode', type: 'input' },
           { label: '项目简称', value: 'ProjectShortName', type: 'input' },
           { label: '标签全称', value: 'ProjectName', type: 'input' },
           { label: '拼音码', value: 'Py', type: 'input' },
@@ -70,8 +62,8 @@ export default {
           { label: '启用标志', value: 'IsEnabled', type: 'slot' }
         ],
         rules: {
-          // ProjectCode: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
-          // ReportOrganCode: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
+          ProjectCode: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
+          ReportOrganCode: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
           ProjectShortName: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
           ProjectName: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
           Py: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],

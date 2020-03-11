@@ -3,7 +3,7 @@
     <el-row :gutter="20">
       <el-col style="margin-bottom: 10px;">
         <el-button type="primary">新建</el-button>
-        <el-checkbox v-model="tableInfo.query.ShowEnabled">显示禁用</el-checkbox>
+        <el-checkbox v-model="tableInfo.query.ShowDelete" @change="updateTable">显示删除</el-checkbox>
       </el-col>
       <el-col :span="16">
         <!-- 表格 -->
@@ -13,24 +13,16 @@
           :refresh="tableInfo.refresh"
           :init-curpage="tableInfo.initCurpage"
           :data.sync="tableInfo.data"
-          :check-box="false"
+          tab-index
           :api="ESBServersGetList"
           :pager="false"
-          :query="form"
+          :query="tableInfo.query"
           :field-list="tableInfo.fieldList"
-          :list-type-info="selects"
+
           :handle="tableInfo.handle"
           @handleClick="handleClick"
           @handleEvent="handleEvent"
-        >
-          <!-- 自定义插槽显示状态 -->
-          <template v-slot:col-myslot="scope">
-            <el-select v-model="form.region" placeholder="请选择">
-              <el-option label="Zone one" value="shanghai" />
-              <el-option label="Zone two" value="beijing" />
-            </el-select>
-          </template>
-        </comp-table>
+        />
       </el-col>
 
       <el-col :span="8">
@@ -42,11 +34,10 @@
           :field-list="formInfo.fieldList"
           :rules="formInfo.rules"
           :label-width="formInfo.labelWidth"
-          :list-type-info="selects"
         >
           <!-- 自定义插槽的使用 -->
         </comp-form>
-        <el-button>测试连接</el-button>
+        <el-button :disabled="EsbServerId === ''" @click="TestESBServers">测试连接</el-button>
         <el-button type="primary" @click="ESBServersAddModels">保存</el-button>
       </el-col>
     </el-row>
@@ -57,16 +48,13 @@
 import CompTable from '@/components/CompTable'
 import CompHeader from '@/components/CompHeader'
 import CompForm from '@/components/CompForm'
-import { ESBServersGetList, ESBServersAddModels } from '@/api/system'
+import { ESBServersGetList, ESBServersAddModels, ESBServersRemoveModels, TestESBServers } from '@/api/system'
 export default {
   components: { CompTable, CompHeader, CompForm },
   data() {
     return {
       ESBServersGetList,
-      selects: {
-        DataBaseType: [],
-        DataSourcesType: []
-      },
+      EsbServerId: '',
       // 表单相关
       formInfo: {
         ref: null, // 可以拿到el-form
@@ -99,7 +87,7 @@ export default {
       tableInfo: {
         refresh: 0,
         query: {
-          ShowEnabled: true
+          ShowDelete: true
         },
         initTable: true,
         initCurpage: 1,
@@ -120,9 +108,7 @@ export default {
           btList: [
             {
               label: '删除',
-              type: 'primary',
-              icon: 'el-icon-ship',
-              event: 'selectFile',
+              event: 'deleteTableRow',
               show: true
             }
           ]
@@ -132,19 +118,8 @@ export default {
   },
   mounted() {
     this.updateTable()
-    this.initSelect()
   },
   methods: {
-    async initSelect() {
-      this.selects.DataBaseType = await this.$store.dispatch(
-        'select/GetSelect',
-        'DataBaseType'
-      )
-      this.selects.DataSourcesType = await this.$store.dispatch(
-        'select/GetSelect',
-        'DataSourcesType'
-      )
-    },
     ESBServersAddModels(formName) {
       this.formInfo.ref.validate(valid => {
         if (valid) {
@@ -153,6 +128,7 @@ export default {
               message: '保存成功!',
               type: 'success'
             })
+            this.EsbServerId = res
           })
         }
       })
@@ -161,17 +137,29 @@ export default {
     updateTable() {
       this.tableInfo.refresh = Math.random()
     },
-    onCancel() {
-      this.$message({
-        message: 'cancel!',
-        type: 'warning'
+    async deleteTableRow(data) {
+      const res = await ESBServersRemoveModels({ EsbServerId: data.EsbServerId })
+      const msg = data.DeleteFlag ? '恢复成功' : '删除成功'
+      if (res === 1) this.$message(msg)
+      this.updateTable()
+    },
+    TestESBServers() {
+      const EsbServerId = this.EsbServerId
+      if (!EsbServerId) {
+        this.$message('请先保存服务器')
+        return false
+      }
+      TestESBServers({ EsbServerId }).then(res => {
+        this.$message(res)
       })
     },
-    handleBtnClick(data) {
-      console.log('data', data)
+    handleEvent(event, data) {
+      if (typeof this[event] === 'function') this[event](data)
     },
-    handleEvent() {},
-    handleClick() {}
+
+    handleClick(event, data) {
+      if (typeof this[event] === 'function') this[event](data)
+    }
   }
 }
 </script>

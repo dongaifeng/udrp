@@ -63,7 +63,7 @@
       :handle="tableInfo.handle"
       @handleClick="handleClick"
       @handleEvent="handleEvent"
-      @el-row-dblclick="tableEdit"
+      @el-row-dblclick="toUploadPage"
     >
       <!-- 自定义插槽显示状态 -->
 
@@ -74,7 +74,7 @@
 
 <script>
 import CompTable from '@/components/CompTable'
-import { GetAuditResultList, ProjectsRemoveModels } from '@/api/dataAudit'
+import { GetAuditResultList } from '@/api/dataAudit'
 export default {
   components: { CompTable },
   data() {
@@ -116,7 +116,7 @@ export default {
           label: '操作',
           width: '200',
           btList: [
-            { label: '进入', type: 'primary', icon: 'el-icon-ship', event: 'tableEdit', show: true }
+            { label: '进入', type: 'primary', icon: 'el-icon-ship', event: 'toUploadPage', show: true }
           ]
         }
 
@@ -143,33 +143,21 @@ export default {
     updateTable(ref) {
       this.tableInfo.refresh = Math.random()
     },
-    handleEvent(event, data) {
-      switch (event) {
-        case 'list':
-          console.log(data)
-      }
+    toUploadPage(data) {
+      const { RRB_ID: RrbId, PROJECT_ID: ProjectId, DATA_TABLE_ID: DataTableId, DATA_TABLE_NAME: DataTableName } = data
+      this.$router.push({
+        path: '/dataAudit/upload',
+        query: { RrbId, ProjectId, DataTableId, DataTableName }
+      })
     },
-    handleClick(event, data) {
-      console.log(event, data)
+    handleEvent(event, data) {
       if (typeof this[event] === 'function') this[event](data)
     },
-    tableEdit(rows) {
-      this.state = 'modify'
-      this.editData = rows
-      this.createProjectVisible = true
-    },
-    addProject() {
-      this.state = 'add'
-      this.editData = null
-      this.createProjectVisible = true
-    },
-    tableDelete(rows) {
-      const { ProjectId, DeleteFlag } = rows
-      ProjectsRemoveModels({ ProjectId, DeleteFlag }).then(res => {
-        this.$message('删除成功')
-        this.updateTable()
-      })
+
+    handleClick(event, data) {
+      if (typeof this[event] === 'function') this[event](data)
     }
+
   }
 }
 </script>

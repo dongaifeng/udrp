@@ -22,6 +22,13 @@ export function UploadGetDictTable(data) {
     data
   })
 }
+export function OperationDictTableStatus(data) {
+  return request({
+    url: '/DataAudit/Upload/OperationDictTableStatus',
+    method: 'post',
+    data
+  })
+}
 
 // 审核结果
 export function GetAuditResultList(data) {

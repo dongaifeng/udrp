@@ -2,13 +2,6 @@
   <div class="app-container">
     <el-form ref="form" :model="form" label-width="80px">
       <el-row>
-        <el-col :span="4">
-          <el-form-item label="上报机构">
-            <el-select v-model="form.ReportOrganCode" placeholder="请选择">
-              <el-option v-for="item in selects.projects" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
-            </el-select>
-          </el-form-item>
-        </el-col>
 
         <el-col :span="4">
           <el-form-item label="推送项目">
@@ -19,9 +12,9 @@
         </el-col>
 
         <el-col :span="4">
-          <el-form-item label="数据表">
-            <el-select v-model="form.DataTableId" placeholder="请选择">
-              <el-option v-for="item in selects.DataTables" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
+          <el-form-item label="服务名">
+            <el-select v-model="form.ServerId" placeholder="请选择">
+              <el-option v-for="item in selects.PushService" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
             </el-select>
           </el-form-item>
         </el-col>
@@ -31,12 +24,39 @@
             <el-input v-model="form.BatchNo" />
           </el-form-item>
         </el-col>
+        <el-col :span="4">
+          <el-form-item label="上传开始时间" label-width="120px">
+            <el-date-picker
+              v-model="form.StartTime"
+              type="date"
+              placeholder="选择日期"
+            />
+          </el-form-item>
+        </el-col>
 
         <el-col :span="4">
-          <el-form-item label="状态">
-            <el-select v-model="form.AuditStatus" placeholder="请选择">
-              <el-option v-for="item in selects.AuditState" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
-            </el-select>
+          <el-form-item label="上传结束时间" label-width="120px">
+            <el-date-picker
+              v-model="form.EndTime"
+              type="date"
+              placeholder="选择日期"
+            />
+          </el-form-item>
+        </el-col>
+
+        <el-col :span="4">
+          <el-form-item label="关键词">
+            <el-input v-model="form.FTR" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="2">
+          <el-form-item label="多次上传">
+            <el-checkbox v-model="form.ShowReportTimes" label="" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="2">
+          <el-form-item label="上传失败">
+            <el-checkbox v-model="form.ShowSucceed" label="" />
           </el-form-item>
         </el-col>
 
@@ -63,27 +83,59 @@
       :handle="tableInfo.handle"
       @handleClick="handleClick"
       @handleEvent="handleEvent"
-      @el-row-dblclick="tableEdit"
+      @el-row-dblclick="detail"
     >
       <!-- 自定义插槽显示状态 -->
 
     </comp-table>
+
+    <!-- 详情 -->
+    <el-dialog
+      v-if="detailVisible"
+      title="查看详细内容"
+      :visible.sync="detailVisible"
+      custom-class="no-padding"
+      width="90%"
+      @close="detailClose"
+    >
+      <!-- <DetailPage :rows.sync="rows" /> -->
+
+      <!-- 列表 -->
+      <comp-table
+        v-if="DataStyle === 'TABLE'"
+        :listen-height="false"
+        :height="'600px'"
+        :refresh="tableInfo2.refresh"
+        :init-curpage="tableInfo2.initCurpage"
+        :data.sync="tableInfo2.data"
+        :tab-index="true"
+        :pager="false"
+        :field-list="tableInfo2.fieldList"
+      >
+        <!-- 自定义插槽显示状态 -->
+      </comp-table>
+
+      <div v-if="DataStyle === 'FORM'">{{ xml }}</div>
+    </el-dialog>
 
   </div>
 </template>
 
 <script>
 import CompTable from '@/components/CompTable'
+import DetailPage from './components/DetailPage'
 import { GetPushRecordList, GetPushRecord } from '@/api/monitor'
 export default {
-  components: { CompTable },
+  components: { CompTable, DetailPage },
   data() {
     return {
       GetPushRecordList,
+      GetPushRecord,
+      detailVisible: false,
+      DataStyle: '',
+      xml: '',
       selects: {
-        AuditState: [],
-        projects: [],
-        DataTables: [],
+        PushService: [],
         pushProjects: []
       },
       // 表单相关
@@ -96,7 +148,7 @@ export default {
         pager: false,
         data: [],
         fieldList: [
-          { label: '推送项目', value: 'PROJECT_ID' },
+          { label: '推送项目', value: 'PROJECT_NAME' },
           { label: '批次号', value: 'BATCH_NO' },
           { label: '上传次数', value: 'UPLOAD_TIMES' },
           { label: '服务名', value: 'SERVICE_NAME' },
@@ -112,60 +164,83 @@ export default {
           label: '操作',
           width: '200',
           btList: [
-            { label: '查看详细内容', type: 'primary', icon: 'el-icon-ship', event: 'tableEdit', show: true }
+            { label: '查看详细内容', type: 'primary', icon: 'el-icon-ship', event: 'detail', show: true }
           ]
         }
 
-      }
+      },
 
+      tableInfo2: {
+        refresh: 0,
+        initTable: true,
+        initCurpage: 1,
+        pager: false,
+        data: [],
+        query: {
+          DataTableId: ''
+        },
+        fieldList: []
+      }
     }
   },
   mounted() {
-    this.updateTable()
+    this.updateTable(1)
     this.initSelect()
+    if (this.$route.query) this.initByRoute()
   },
   methods: {
     async initSelect() {
-      this.selects.AuditState = await this.$store.dispatch('select/GetSelect', 'AuditState')
-      this.selects.projects = await this.$store.dispatch('select/GetSelect', 'ReportOrgan')
       this.selects.pushProjects = await this.$store.dispatch('select/GetProjects', { Type: '2' })
     },
 
     async pushProjectsChange(ProjectId) {
       console.log(ProjectId)
-      this.selects.DataTables = await this.$store.dispatch('select/GetDataTables', { ProjectId })
+      this.selects.PushService = await this.$store.dispatch('select/GetPushService', { ProjectId })
+    },
+
+    initByRoute() {
+      this.form.ProjectId = this.$route.query.PROJECT_ID
+      if (this.form.ProjectId) this.pushProjectsChange(this.form.ProjectId)
+      this.$nextTick(function() {
+        this.form.ServerId = this.$route.query.SERVICE_ID
+      })
+    },
+
+    detail(rows) {
+      this.detailVisible = true
+      GetPushRecord({ RruId: rows.RRB_ID }).then(res => {
+        console.log(res)
+        const { DataStyle, DataContent } = res
+        this.DataStyle = DataStyle
+        if (DataStyle === 'TABLE') {
+          const data = JSON.parse(DataContent)
+          this.tableInfo2.fieldList = Object.keys(data[0]).map(val => ({ label: val, value: val }))
+          this.tableInfo2.data = data
+        } else {
+          this.xml = DataContent
+        }
+      })
+    },
+
+    detailClose() {
+      this.tableInfo2.data = this.tableInfo2.fieldList = []
+      this.xml = this.DataStyle = ''
     },
 
     updateTable(ref) {
-      this.tableInfo.refresh = Math.random()
-    },
-    handleEvent(event, data) {
-      switch (event) {
-        case 'list':
-          console.log(data)
+      if (ref && ref === 2) {
+        this.tableInfo2.refresh = Math.random()
+      } else {
+        this.tableInfo.refresh = Math.random()
       }
     },
-    handleClick(event, data) {
-      console.log(event, data)
+    handleEvent(event, data) {
       if (typeof this[event] === 'function') this[event](data)
     },
-    tableEdit(rows) {
-      this.state = 'modify'
-      this.editData = rows
-      this.createProjectVisible = true
-    },
-    addProject() {
-      this.state = 'add'
-      this.editData = null
-      this.createProjectVisible = true
-    },
-    tableDelete(rows) {
-      const { ProjectId, DeleteFlag } = rows
-      GetPushRecord({ ProjectId, DeleteFlag }).then(res => {
-        this.$message('删除成功')
-        this.updateTable()
-      })
+    handleClick(event, data) {
+      if (typeof this[event] === 'function') this[event](data)
     }
+
   }
 }
 </script>

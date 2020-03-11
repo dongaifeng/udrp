@@ -1,39 +1,26 @@
 <template>
   <div>
-    <el-row>
-      <el-col :span="12">
-        <CompForm
-          :ref-obj.sync="formInfo.ref"
-          :form-data="formInfo.data"
-          :field-list="formInfo.fieldList"
-          :label-width="formInfo.labelWidth"
-          :list-type-info="listTypeInfo"
-          :span="24"
-          :rules="formInfo.rules"
-        >
-          <!-- 自定义插槽的使用 -->
-          <template v-slot:form-IsEnabled>
-            <el-checkbox v-model="formInfo.data.IsEnabled" />
-          </template>
-        </CompForm>
-      </el-col>
-      <el-col :span="12">
-        <el-form label-width="120px" :model="formInfo.data">
-          <el-form-item label="活动名称">
-            <el-input
-              v-model="formInfo.data.ProjectDesc"
-              type="textarea"
-              rows="24"
-              placeholder="请输入内容"
-              label="请输入内容"
-            />
-          </el-form-item>
-        </el-form>
-      </el-col>
-    </el-row>
-    <el-row type="flex" justify="center">
-      <el-button type="primary" @click="addProject">保存</el-button>
-    </el-row>
+    <!-- 列表 -->
+    <comp-table
+      :listen-height="false"
+      :height="'calc(100vh - 450px)'"
+      :refresh="tableInfo2.refresh"
+      :init-curpage="tableInfo2.initCurpage"
+      :data.sync="tableInfo2.data"
+      :check-box="true"
+      :tab-index="true"
+      :api="UploadGetDictTable"
+      :pager="false"
+      :query="form"
+      :field-list.sync="tableInfo2.fieldList"
+      auto-header
+      :handle="tableInfo2.handle"
+      @handleClick="handleClick"
+      @handleEvent="handleEvent"
+      @el-row-dblclick="tableEdit"
+    >
+      <!-- 自定义插槽显示状态 -->
+    </comp-table>
   </div>
 </template>
 

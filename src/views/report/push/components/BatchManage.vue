@@ -55,7 +55,6 @@
           :handle="tableInfo.handle"
           @handleClick="handleClick"
           @handleEvent="handleEvent"
-          @selectFile="handleBtnClick"
         >
           <!-- 自定义插槽显示状态 -->
 
@@ -102,13 +101,11 @@
 </template>
 
 <script>
-import CompForm from '@/components/CompForm'
-import CompHeader from '@/components/CompHeader'
-import CompTable from '@/components/CompTable'
-import { AddBatchRule, GetBatchList, GetBatch, AddBatchModels } from '@/api/report'
+import base from '@/mixin/base'
+import { AddBatchRule, GetBatchList, GetBatch, AddBatchModels, BatchRemoveModels } from '@/api/report'
 import { mapGetters } from 'vuex'
 export default {
-  components: { CompForm, CompHeader, CompTable },
+  mixins: [base],
   data() {
     const rules = {
       BatchNo: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
@@ -162,8 +159,8 @@ export default {
           { label: '涉及业务日期范围', value: 'BusinessDateRange' },
           { label: '创建日期', value: 'CreatedDateTime' },
           { label: '创建人', value: 'CreatedUserId' },
-          { label: '修改日期', value: 'UpdatedDateTime', type: 'state', list: [{ 0: '启用' }, { 1: '禁用' }] },
-          { label: '修改人', value: 'UpdatedUserId', type: 'state', list: [{ 0: '启用' }, { 1: '禁用' }] }
+          { label: '修改日期', value: 'UpdatedDateTime' },
+          { label: '修改人', value: 'UpdatedUserId' }
         ],
         handle: {
           fixed: 'right',
@@ -171,7 +168,7 @@ export default {
           width: '200',
           btList: [
             { label: '查看记录', type: 'primary', icon: 'el-icon-ship', event: 'selectFile', show: true },
-            { label: '删除', type: 'primary', icon: 'el-icon-ship', event: 'selectFile', show: true }
+            { label: '删除', type: 'primary', icon: 'el-icon-ship', event: 'deleteTableRow', show: true }
           ]
         }
 
@@ -231,19 +228,13 @@ export default {
       this.tableInfo.refresh = Math.random()
     },
 
-    handleBtnClick(data) {
-      console.log('data', data)
-    },
-    handleEvent(event, data) {
-      if (typeof this[event] === 'function') this[event](data)
-    },
     async DataSourceChange(ClassCode) {
       const res = await this.$store.dispatch('select/GetPushSources', { ClassCode })
       const { ServerName, Database } = res[0]
       this.formInfo.data = { ClassCode, ServerName, Database }
     },
-    handleClick(a) {
-      console.log(a)
+    async deleteTableRow(data) {
+      this.delete(BatchRemoveModels, { RrbId: data.RrbId }, data.DeleteFlag)
     }
   }
 }

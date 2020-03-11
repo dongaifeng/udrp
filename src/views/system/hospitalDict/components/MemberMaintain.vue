@@ -11,14 +11,19 @@
           :rules="formInfo.rules"
           @handleEvent="handleEvent"
         >
-          <template v-slot:form-ShowDelete>
-            <el-checkbox v-model="formInfo.data.ShowDelete" />
+          <template v-slot:form-DeleteFlag>
+            <el-checkbox v-model="formInfo.data.DeleteFlag" />
           </template>
 
           <template v-slot:form-button>
-            <a href="http://localhost:33455/api/Files/DownloadTemplate">下载模板</a>
+            <el-button type="text" @click="DownloadTemplate">下载模板</el-button>
             <el-button type="primary" @click="updateTable">查询</el-button>
-            <el-button type="primary" @click="updateTable">导入</el-button>
+
+            <comp-upload
+              action="/System/HospitalDictMembers/Import"
+              :data="formInfo.data"
+              :label="'导入'"
+            />
           </template>
         </CompForm>
 
@@ -39,7 +44,6 @@
           :handle="tableInfo.handle"
           @handleClick="handleClick"
           @handleEvent="handleEvent"
-          @selectFile="handleBtnClick"
         >
           <!-- 自定义插槽显示状态 -->
         </comp-table>
@@ -50,7 +54,7 @@
 
         <el-form ref="ruleForm" :rules="rules" :model="form" label-width="80px">
           <el-form-item label="院内字典" prop="ProjectId">
-            <el-input v-model="form.DefinitionCode" />
+            <el-input v-model="form.DefinitionName" disabled />
           </el-form-item>
 
           <el-form-item label="成员编码" prop="MemberCode">
@@ -83,29 +87,23 @@
 </template>
 
 <script>
-import CompForm from '@/components/CompForm'
-import CompHeader from '@/components/CompHeader'
-import CompTable from '@/components/CompTable'
-import { getDictName } from '@/utils'
+
 import {
   HospitalDictsMembersGetList,
   HospitalDictsMembersModifyModels,
-  HospitalDictsMembersAddModels
+  HospitalDictsMembersAddModels,
+  HospitalDictsMembersRemoveModels
+
 } from '@/api/system'
 import { DownloadTemplate } from '@/api/select'
 export default {
-  components: { CompForm, CompHeader, CompTable },
   props: {
     rows: [Object]
   },
   data() {
     const rules = {
-      MemberCode: [
-        { required: true, message: '请输入活动名称', trigger: 'blur' }
-      ],
-      MemberName: [
-        { required: true, message: '请输入活动名称', trigger: 'blur' }
-      ],
+      MemberCode: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
+      MemberName: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
       Py: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
       Sort: [{ required: true, message: '请输入活动名称', trigger: 'blur' }]
     }
@@ -113,9 +111,10 @@ export default {
       HospitalDictsMembersGetList,
       DownloadTemplate,
       rules,
+      loading: false,
       form: {
         IsEnabled: 1,
-        DefinitionCode: this.rows.DefinitionCode
+        DefinitionName: this.rows.DefinitionName
       },
       select: {
         Projects: []
@@ -123,20 +122,15 @@ export default {
       formInfo: {
         ref: null,
         data: {
-          DefinitionCode: this.rows.DefinitionCode
+
         },
         fieldList: [
           // 每一项定义
-          { label: '院内系统', value: 'ProjectId', type: 'input', span: '5' },
-          {
-            label: '院内字典',
-            value: 'DefinitionCode',
-            type: 'input',
-            span: '5'
-          },
-          { label: '拼音码', value: 'Py', type: 'input', span: '5' },
-          { label: '显示删除', value: 'ShowDelete', type: 'slot', span: '2' },
-          { label: '', value: 'button', type: 'slot', span: '7' }
+          { label: '院内系统', value: 'SystemName', type: 'input', span: 5, disabled: true },
+          { label: '院内字典', value: 'DefinitionName', type: 'input', span: 5, disabled: true },
+          { label: '拼音码', value: 'Py', type: 'input', span: 5 },
+          { label: '显示删除', value: 'DeleteFlag', type: 'slot', span: 2, disabled: true },
+          { label: '', value: 'button', type: 'slot', span: 7 }
         ],
         rules: {}
       },
@@ -159,35 +153,30 @@ export default {
           fixed: 'right',
           label: '操作',
           width: '200',
-          btList: [
-            {
-              label: '删除',
-              type: 'primary',
-              icon: 'el-icon-ship',
-              event: 'selectFile',
-              show: true
-            }
-          ]
-        }
-      },
-      // 过滤相关配置
-      filterInfo: {
-        query: {
-          ProjectId: '1',
-          page: 1,
-          rows: 100
+          btList: [{ label: '删除', event: 'deleteTableRow', show: true }]
         }
       }
+
     }
   },
   computed: {
     ProjectId() {
       return this.$store.getters.ProjectId
+    },
+    toPy() {
+      return this.form.MemberName
+    }
+  },
+  watch: {
+    toPy: function(newVal) {
+      this.form.Py = this.$py.getCamelChars(newVal)
     }
   },
   mounted() {
     this.updateTable()
     this.initSelect()
+    const { Py, ...another } = this.rows
+    this.formInfo.data = another
   },
   methods: {
     async initSelect() {
@@ -209,11 +198,8 @@ export default {
     HospitalDictsMembersAddModels() {
       this.$refs.ruleForm.validate(valid => {
         if (valid) {
-          const DefinitionName = getDictName(
-            this.select.Projects,
-            this.rows.ProjectId
-          )
-          HospitalDictsMembersAddModels({ ...this.form, DefinitionName }).then(
+          const { SystemCode, DefinitionCode } = this.rows
+          HospitalDictsMembersAddModels({ ...this.form, SystemCode, DefinitionCode }).then(
             res => {
               this.$message('保存成功')
             }
@@ -225,19 +211,20 @@ export default {
       this.tableInfo.refresh = Math.random()
     },
 
-    handleBtnClick(data) {
-      console.log('data', data)
-    },
-    handleEvent(event, data) {
-      // this[event](data)
-      switch (event) {
-        case 'list':
-          console.log(data)
-      }
+    async deleteTableRow(data) {
+      console.log(data)
+      const res = await HospitalDictsMembersRemoveModels({ MemberId: data.MemberId })
+      const msg = data.DeleteFlag ? '恢复成功' : '删除成功'
+      if (res === 1) this.$message(msg)
+      this.updateTable()
     },
 
-    handleClick(a) {
-      console.log(a)
+    handleEvent(event, data) {
+      if (typeof this[event] === 'function') this[event](data)
+    },
+
+    handleClick(event, data) {
+      if (typeof this[event] === 'function') this[event](data)
     }
   }
 }
@@ -246,5 +233,8 @@ export default {
 <style lang="scss" scoped>
 .container {
   padding: 0 20px;
+}
+.upload-btn{
+  display: inline-block;
 }
 </style>

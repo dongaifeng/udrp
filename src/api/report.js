@@ -46,7 +46,7 @@ export function GetProjects(data) {
   })
 }
 
-// 服务
+// 服务列表
 
 export function GetServicesList(data) {
   return request({
@@ -62,9 +62,16 @@ export function ServicesModifyProjects(data) {
     data
   })
 }
-export function ServicesMAddModels(data) {
+export function ServicesAddModels(data) {
   return request({
     url: '/Reported/Services/AddModels',
+    method: 'post',
+    data
+  })
+}
+export function ServicesRemoveModels(data) {
+  return request({
+    url: '/Reported/Services/RemoveModels',
     method: 'post',
     data
   })
@@ -94,6 +101,13 @@ export function AddDataTable(data) {
     data
   })
 }
+export function DataTablesRemoveModels(data) {
+  return request({
+    url: '/Reported/DataTables/RemoveModels',
+    method: 'post',
+    data
+  })
+}
 // 数据项
 export function GetDataItemsList(data) {
   return request({
@@ -113,6 +127,14 @@ export function AddDataItemsTables(data) {
 export function DataItemsAddModels(data) {
   return request({
     url: '/Reported/DataItems/AddModels',
+    method: 'post',
+    data
+  })
+}
+
+export function DataItemsRemoveModels(data) {
+  return request({
+    url: '/Reported/DataItems/RemoveModels',
     method: 'post',
     data
   })
@@ -158,6 +180,13 @@ export function AddBatchRule(data) {
 export function AddBatchModels(data) {
   return request({
     url: '/Reported/Batch/AddModels',
+    method: 'post',
+    data
+  })
+}
+export function BatchRemoveModels(data) {
+  return request({
+    url: '/Reported/Batch/RemoveModels',
     method: 'post',
     data
   })
@@ -223,8 +252,15 @@ export function ReportDictsModifyModels(data) {
     data
   })
 }
+export function ReportDictsRemoveModels(data) {
+  return request({
+    url: '/Reported/ReportDicts/RemoveModels',
+    method: 'post',
+    data
+  })
+}
 
-// 上报字典 成员
+// 成员维护
 export function ReportDictMembersGetList(data) {
   return request({
     url: '/Reported/ReportDictMembers/GetList',
@@ -242,6 +278,13 @@ export function ReportDictMembersAddModels(data) {
 export function ReportDictMembersModifyModels(data) {
   return request({
     url: '/Reported/ReportDictMembers/ModifyModels',
+    method: 'post',
+    data
+  })
+}
+export function ReportDictMembersRemoveModels(data) {
+  return request({
+    url: '/Reported/ReportDictMembers/RemoveModels',
     method: 'post',
     data
   })

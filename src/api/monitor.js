@@ -22,6 +22,13 @@ export function CommunicationService(data) {
     data
   })
 }
+export function GetDictTable(data) {
+  return request({
+    url: '/Monitoring/Reported/GetDictTable',
+    method: 'post',
+    data
+  })
+}
 
 // 推送记录
 export function GetPushRecordList(data) {
@@ -38,7 +45,8 @@ export function GetPushRecord(data) {
     data
   })
 }
-// 推送记录
+
+// 调阅记录
 export function GetReadRecordList(data) {
   return request({
     url: '/Monitoring/Read/GetReadRecordList',

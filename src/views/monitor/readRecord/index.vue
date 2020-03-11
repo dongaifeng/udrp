@@ -2,45 +2,58 @@
   <div class="app-container">
     <el-form ref="form" :model="form" label-width="80px">
       <el-row>
+
         <el-col :span="4">
-          <el-form-item label="上报机构">
-            <el-select v-model="form.ReportOrganCode" placeholder="请选择">
-              <el-option v-for="item in selects.projects" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
+          <el-form-item label="调阅项目">
+            <el-select v-model="form.ProjectId" placeholder="请选择" @change="readProjectsChange">
+              <el-option v-for="item in selects.readProjects" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
+            </el-select>
+          </el-form-item>
+        </el-col>
+
+        <el-col :span="3">
+          <el-form-item label="类别">
+            <el-select v-model="form.Readway" placeholder="请选择" @change="readProjectsChange">
+              <el-option v-for="item in selects.ReadType" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
             </el-select>
           </el-form-item>
         </el-col>
 
         <el-col :span="4">
-          <el-form-item label="推送项目">
-            <el-select v-model="form.ProjectId" placeholder="请选择" @change="pushProjectsChange">
-              <el-option v-for="item in selects.pushProjects" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
+          <el-form-item label="名称">
+            <el-select v-model="form.ServerId" placeholder="请选择">
+              <el-option v-for="item in selects.ServiceName" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
             </el-select>
           </el-form-item>
         </el-col>
 
         <el-col :span="4">
-          <el-form-item label="数据表">
-            <el-select v-model="form.DataTableId" placeholder="请选择">
-              <el-option v-for="item in selects.DataTables" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
-            </el-select>
+          <el-form-item label="调阅开始时间" label-width="120px">
+            <el-date-picker
+              v-model="form.StartTime"
+              type="date"
+              placeholder="选择日期"
+            />
           </el-form-item>
         </el-col>
 
         <el-col :span="4">
-          <el-form-item label="批次号">
-            <el-input v-model="form.BatchNo" />
+          <el-form-item label="调阅结束时间" label-width="120px">
+            <el-date-picker
+              v-model="form.EndTime"
+              type="date"
+              placeholder="选择日期"
+            />
           </el-form-item>
         </el-col>
 
-        <el-col :span="4">
-          <el-form-item label="状态">
-            <el-select v-model="form.AuditStatus" placeholder="请选择">
-              <el-option v-for="item in selects.AuditState" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
-            </el-select>
+        <el-col :span="3">
+          <el-form-item label="关键词">
+            <el-input v-model="form.FTR" />
           </el-form-item>
         </el-col>
 
-        <el-col :span="2" :push="1">
+        <el-col :span="1" :push="1">
           <el-button type="primary" @click="updateTable">查询</el-button>
         </el-col>
       </el-row>
@@ -55,7 +68,7 @@
       :data.sync="tableInfo.data"
       :check-box="false"
       :tab-index="true"
-      :api="GetAuditResultList"
+      :api="GetReadRecordList"
       :pager="false"
       :query="form"
       :field-list="tableInfo.fieldList"
@@ -63,31 +76,63 @@
       :handle="tableInfo.handle"
       @handleClick="handleClick"
       @handleEvent="handleEvent"
-      @el-row-dblclick="tableEdit"
+      @el-row-dblclick="detail"
     >
       <!-- 自定义插槽显示状态 -->
 
     </comp-table>
 
+    <!-- 详情 -->
+    <el-dialog
+      v-if="detailVisible"
+      title="查看详细内容"
+      :visible.sync="detailVisible"
+      custom-class="no-padding"
+      width="90%"
+      @close="detailClose"
+    >
+      <!-- <DetailPage :rows.sync="rows" /> -->
+
+      <!-- 列表 -->
+      <comp-table
+        v-if="DataStyle === 'TABLE'"
+        :listen-height="false"
+        :height="'600px'"
+        :refresh="tableInfo2.refresh"
+        :init-curpage="tableInfo2.initCurpage"
+        :data.sync="tableInfo2.data"
+        :tab-index="true"
+        :pager="false"
+        :field-list="tableInfo2.fieldList"
+      >
+        <!-- 自定义插槽显示状态 -->
+      </comp-table>
+
+      <div v-if="DataStyle === 'FORM'">{{ xml }}</div>
+    </el-dialog>
+
   </div>
 </template>
 
 <script>
-import CompTable from '@/components/CompTable'
-import { GetAuditResultList, ProjectsRemoveModels } from '@/api/dataAudit'
+import { GetReadRecordList, GetReadRecord } from '@/api/monitor'
 export default {
-  components: { CompTable },
   data() {
     return {
-      GetAuditResultList,
+      GetReadRecordList,
+      GetReadRecord,
+      detailVisible: false,
+      DataStyle: '',
+      xml: '',
       selects: {
-        AuditState: [],
-        projects: [],
-        DataTables: [],
-        pushProjects: []
+        ReadType: [],
+        ServiceName: [],
+        readProjects: []
       },
       // 表单相关
-      form: {},
+      form: {
+        ServerId: ''
+      },
       // 表格相关
       tableInfo: {
         refresh: 0,
@@ -96,80 +141,102 @@ export default {
         pager: false,
         data: [],
         fieldList: [
-          { label: '上报机构', value: 'ClassCode' },
-          { label: '项目名称', value: 'ClassCode' },
-          { label: '数据表', value: 'ProjectCode' },
-          { label: '批次号', value: 'ProjectShortName' },
-          { label: '状态', value: 'Status' },
-          { label: '填报次数', value: 'ProjectName' },
-          { label: '提交时间', value: 'ProjectDesc' },
-          { label: '提交人', value: 'Py' },
-          { label: '审核次数', value: 'ReadWay' },
-          { label: '审核时间', value: 'ProjectLeader' },
-          { label: '审核人', value: 'TaskOutType' },
-          { label: '上传次数', value: 'SaveLogDays' },
-          { label: '上传时间', value: 'SaveLogDays' },
-          { label: '上传人', value: 'SaveLogDays' }
+          { label: '调阅项目', value: 'PROJECT_NAME' },
+          { label: '类别', value: 'READ_WAY' },
+          { label: '标识', value: 'IDENTITY' },
+          { label: '服务名', value: 'SERVICE_NAME' },
+          { label: '调阅请求时间', value: 'READ_REQUEST_TIMES' },
+          { label: '调阅响应时间', value: 'READ_RESPONSE_TIMES' },
+          { label: '调阅查询条件', value: 'READ_CONDITION' }
         ],
         handle: {
           fixed: 'right',
           label: '操作',
           width: '200',
           btList: [
-            { label: '进入', type: 'primary', icon: 'el-icon-ship', event: 'tableEdit', show: true }
+            { label: '查看详细内容', type: 'primary', icon: 'el-icon-ship', event: 'detail', show: true }
           ]
         }
 
-      }
+      },
 
+      tableInfo2: {
+        refresh: 0,
+        initTable: true,
+        initCurpage: 1,
+        pager: false,
+        data: [],
+        query: {
+          DataTableId: ''
+        },
+        fieldList: []
+      }
     }
   },
   mounted() {
-    this.updateTable()
+    this.updateTable(1)
     this.initSelect()
+    if (this.$route.query) this.initByRoute()
   },
   methods: {
     async initSelect() {
-      this.selects.AuditState = await this.$store.dispatch('select/GetSelect', 'AuditState')
-      this.selects.projects = await this.$store.dispatch('select/GetSelect', 'ReportOrgan')
-      this.selects.pushProjects = await this.$store.dispatch('select/GetProjects', { Type: '2' })
+      this.selects.readProjects = await this.$store.dispatch('select/GetProjects', { Type: '3' })
+      this.selects.ReadType = await this.$store.dispatch('select/GetSelect', 'ReadType')
     },
 
-    async pushProjectsChange(ProjectId) {
-      console.log(ProjectId)
-      this.selects.DataTables = await this.$store.dispatch('select/GetDataTables', { ProjectId })
+    async readProjectsChange() {
+      const { ProjectId, Readway: Type } = this.form
+      if (ProjectId && Type) {
+        this.selects.ServiceName = await this.$store.dispatch('select/GetServiceName', { ProjectId, Type })
+      } else {
+        this.selects.ServiceName = []
+      }
+    },
+
+    initByRoute() {
+      console.log(this.$route.query)
+      this.form.ProjectId = this.$route.query.PROJECT_ID
+      this.form.Readway = this.$route.query.READ_WAY
+      if (this.form.ProjectId && this.form.Readway) this.readProjectsChange()
+      this.$nextTick(function() {
+        this.form.ServerId = this.$route.query.SERVICE_ID
+      })
+    },
+
+    detail(rows) {
+      this.detailVisible = true
+      GetReadRecord({ RruId: rows.RRB_ID }).then(res => {
+        const { DataStyle, DataContent } = res
+        this.DataStyle = DataStyle
+        if (DataStyle === 'TABLE') {
+          const data = JSON.parse(DataContent)
+          this.tableInfo2.fieldList = Object.keys(data[0]).map(val => ({ label: val, value: val }))
+          this.tableInfo2.data = data
+        } else {
+          this.xml = DataContent
+        }
+      })
+    },
+
+    detailClose() {
+      this.tableInfo2.data = this.tableInfo2.fieldList = []
+      this.xml = this.DataStyle = ''
     },
 
     updateTable(ref) {
-      this.tableInfo.refresh = Math.random()
-    },
-    handleEvent(event, data) {
-      switch (event) {
-        case 'list':
-          console.log(data)
+      if (ref && ref === 2) {
+        this.tableInfo2.refresh = Math.random()
+      } else {
+        this.tableInfo.refresh = Math.random()
       }
     },
-    handleClick(event, data) {
-      console.log(event, data)
+    handleEvent(event, data) {
       if (typeof this[event] === 'function') this[event](data)
     },
-    tableEdit(rows) {
-      this.state = 'modify'
-      this.editData = rows
-      this.createProjectVisible = true
-    },
-    addProject() {
-      this.state = 'add'
-      this.editData = null
-      this.createProjectVisible = true
-    },
-    tableDelete(rows) {
-      const { ProjectId, DeleteFlag } = rows
-      ProjectsRemoveModels({ ProjectId, DeleteFlag }).then(res => {
-        this.$message('删除成功')
-        this.updateTable()
-      })
+    handleClick(event, data) {
+      if (typeof this[event] === 'function') this[event](data)
     }
+
   }
 }
 </script>

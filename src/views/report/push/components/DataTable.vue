@@ -40,7 +40,6 @@
           :handle="tableInfo.handle"
           @handleClick="handleClick"
           @handleEvent="handleEvent"
-          @selectFile="handleBtnClick"
         >
           <!-- 自定义插槽显示状态 -->
 
@@ -89,12 +88,10 @@
 </template>
 
 <script>
-import CompForm from '@/components/CompForm'
-import CompHeader from '@/components/CompHeader'
-import CompTable from '@/components/CompTable'
-import { GetDataTableList, AddDataTable, ModifyProjects } from '@/api/report'
+import base from '@/mixin/base'
+import { GetDataTableList, AddDataTable, ModifyProjects, DataTablesRemoveModels } from '@/api/report'
 export default {
-  components: { CompForm, CompHeader, CompTable },
+  mixins: [base],
   data() {
     const rules = {
       DataTableCode: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
@@ -138,15 +135,15 @@ export default {
           { label: '数据表', value: 'DataTableCode' },
           { label: '描述', value: 'DataTableDesc' },
           { label: '拼音码', value: 'Py' },
-          { label: '启用标志', value: 'IsEnabled', type: 'state', list: [{ 0: '启用' }, { 1: '禁用' }] }
+          { label: '启用标志', value: 'IsEnabled', type: 'state', list: this.$store.state.select.EnabledState }
         ],
         handle: {
           fixed: 'right',
           label: '操作',
           width: '200',
           btList: [
-            { label: '数据项', type: 'primary', icon: 'el-icon-ship', event: 'selectFile', show: true },
-            { label: '删除', type: 'primary', icon: 'el-icon-ship', event: 'selectFile', show: true }
+            { label: '数据项', type: 'primary', icon: 'el-icon-ship', event: 'toDataItem', show: true },
+            { label: '删除', type: 'primary', icon: 'el-icon-ship', event: 'deleteTableRow', show: true }
           ]
         }
 
@@ -195,21 +192,22 @@ export default {
     updateTable(ref) {
       this.tableInfo.refresh = Math.random()
     },
+    toDataItem() {
+      this.$emit('changeTab', 'DataItem')
+    },
+    async deleteTableRow(data) {
+      const res = await DataTablesRemoveModels({ DataTableId: data.DataTableId })
+      const msg = data.DeleteFlag ? '恢复成功' : '删除成功'
+      if (res === 1) this.$message(msg)
+      this.updateTable()
+    },
 
-    handleBtnClick(data) {
-      console.log('data', data)
-    },
-    handleEvent(event, data) {
-      if (typeof this[event] === 'function') this[event](data)
-    },
     async DataSourceChange(ClassCode) {
       const res = await this.$store.dispatch('select/GetPushSources', { ClassCode })
       const { ServerName, Database } = res[0]
       this.formInfo.data = { ClassCode, ServerName, Database }
-    },
-    handleClick(a) {
-      console.log(a)
     }
+
   }
 }
 </script>

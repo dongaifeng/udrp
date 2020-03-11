@@ -1,10 +1,10 @@
 /**
    * 通过key找到在列表中对应的显示
    * @param {Object} obj
-   *  @param obj.dataList 数据列表
-   *  @param obj.value    数据的值对应的字段名称   例如 'value'
-   *  @param obj.label    数据的说明对应的字段名称 例如 'label'
-   *  @param obj.data     当前传入的数据值
+   *  @param dataList 数据列表
+   *  @param value    数据的值对应的字段名称   例如 'value'
+   *  @param label    数据的说明对应的字段名称 例如 'label'
+   *  @param data     当前传入的数据值
    * @return name        返回当前传入值在数组中对应的名字
    */
 export function getDictName(dataList, data, label = 'ClassName', value = 'ClassCode') {
@@ -18,6 +18,33 @@ export function getDictName(dataList, data, label = 'ClassName', value = 'ClassC
     }
   }
   return name
+}
+
+/*
+ * 下载文件
+ *
+ */
+// export function downloadFile(href) {
+//   const a = document.createElement('a')
+//   a.style.display = 'none'
+//   a.href = process.env.VUE_APP_BASE_API + href
+//   a.click()
+// }
+
+export function downloadFile(url, targetType = '_blank', id = 'open', download = false) {
+  // 如果存在则删除
+  if (document.getElementById(id)) {
+    document.body.removeChild(document.getElementById(id))
+  }
+  const a = document.createElement('a')
+  a.setAttribute('href', process.env.VUE_APP_BASE_API + url)
+  if (download) {
+    a.setAttribute('download', url)
+  }
+  a.setAttribute('target', targetType)
+  a.setAttribute('id', id)
+  document.body.appendChild(a)
+  a.click()
 }
 
 /**

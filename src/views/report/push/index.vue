@@ -56,9 +56,9 @@
       title="编辑推送项目"
       :visible.sync="createProjectVisible"
       custom-class="no-padding"
-      width="80%"
+      width="90%"
     >
-      <el-tabs type="border-card" tab-position="bottom">
+      <el-tabs v-model="activeTab" type="border-card" tab-position="bottom">
         <el-tab-pane lazy label="项目定义">
           <ProjectDefinition :edit-data="editData" :state="state" />
         </el-tab-pane>
@@ -66,9 +66,9 @@
           <ServiceList />
         </el-tab-pane>
         <el-tab-pane lazy label="数据表">
-          <DataTable />
+          <DataTable @changeTab="changeTab" />
         </el-tab-pane>
-        <el-tab-pane lazy label="数据项">
+        <el-tab-pane name="DataItem" lazy label="数据项">
           <DataItem />
         </el-tab-pane>
         <el-tab-pane lazy label="批次管理">
@@ -101,6 +101,7 @@ export default {
       reportedGetLIst,
       createProjectVisible: false,
       editData: null,
+      activeTab: '',
       state: 'add',
       selects: {
         projects: []
@@ -202,6 +203,10 @@ export default {
         this.$message('删除成功')
         this.updateTable()
       })
+    },
+    changeTab(index) {
+      console.log(index)
+      this.activeTab = index
     }
   }
 }

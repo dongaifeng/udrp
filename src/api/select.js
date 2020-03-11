@@ -8,11 +8,11 @@ export function GetSelect(data) {
   })
 }
 
-export function GetProjectsDataItem(params) {
+export function GetProjectsDataItem(data) {
   return request({
     url: '/api/Selects/GetProjectsDataItem',
-    method: 'get',
-    params
+    method: 'post',
+    data
   })
 }
 
@@ -59,6 +59,13 @@ export function GetReadSources(params) {
 export function GetPushSources(data) {
   return request({
     url: '/api/Selects/GetPushSources',
+    method: 'post',
+    data
+  })
+}
+export function GetServiceName(data) {
+  return request({
+    url: '/api/Selects/GetServiceName',
     method: 'post',
     data
   })

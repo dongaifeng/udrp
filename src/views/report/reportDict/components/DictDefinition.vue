@@ -29,7 +29,7 @@
           :data.sync="tableInfo.data"
           :check-box="false"
           :tab-index="true"
-          :api="HospitalDictsGetList"
+          :api="ReportDictsGetList"
           :pager="false"
           :query="formInfo.data"
           :field-list="tableInfo.fieldList"
@@ -39,6 +39,7 @@
           @handleEvent="handleEvent"
         >
           <!-- 自定义插槽显示状态 -->
+
         </comp-table>
       </el-col>
 
@@ -46,18 +47,13 @@
         <CompHeader context="编辑" />
 
         <el-form ref="ruleForm" :rules="rules" :model="form" label-width="80px">
-          <el-form-item label="院内系统" prop="SystemCode">
-            <el-select v-model="form.SystemCode" placeholder="请选择活动区域">
-              <el-option
-                v-for="item in select.HospitalSystem"
-                :key="item.ClassCode"
-                :label="item.ClassName"
-                :value="item.ClassCode"
-              />
+          <el-form-item label="上报项目" prop="ProjectId">
+            <el-select v-model="form.ProjectId" placeholder="请选择活动区域">
+              <el-option v-for="item in select.Projects" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
             </el-select>
           </el-form-item>
 
-          <el-form-item label="字典编码" prop="DefinitionCode">
+          <el-form-item label="字典编码" prop="DefinitionId">
             <el-input v-model="form.DefinitionId" />
           </el-form-item>
 
@@ -78,11 +74,12 @@
           </el-form-item>
 
           <el-form-item>
-            <el-button type="primary" @click="HospitalDictsAddModels">保存</el-button>
+            <el-button type="primary" @click="ReportDictsAddModels">保存</el-button>
           </el-form-item>
         </el-form>
       </el-col>
     </el-row>
+
   </div>
 </template>
 
@@ -90,13 +87,7 @@
 import CompForm from '@/components/CompForm'
 import CompHeader from '@/components/CompHeader'
 import CompTable from '@/components/CompTable'
-import { getDictName } from '@/utils'
-import {
-  HospitalDictsGetList,
-  HospitalDictsModifyModels,
-  HospitalDictsAddModels,
-  HospitalDictsRemoveModels
-} from '@/api/system'
+import { ReportDictsGetList, ReportDictsModifyModels, ReportDictsAddModels, ReportDictsRemoveModels } from '@/api/report'
 export default {
   components: { CompForm, CompHeader, CompTable },
   props: {
@@ -105,34 +96,27 @@ export default {
   },
   data() {
     const rules = {
-      DefinitionId: [
-        { required: true, message: '请输入活动名称', trigger: 'blur' }
-      ],
-      DefinitionName: [
-        { required: true, message: '请输入活动名称', trigger: 'blur' }
-      ],
+      DefinitionId: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
+      DefinitionName: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
       Py: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
       Sort: [{ required: true, message: '请输入活动名称', trigger: 'blur' }]
     }
     return {
-      HospitalDictsGetList,
+      ReportDictsGetList,
       rules,
       form: {
         IsEnabled: 1
       },
       select: {
-        HospitalSystem: []
+        Projects: [],
+        OutPutNode: [],
+        MonitoringRoute: []
       },
       formInfo: {
         ref: null,
         data: {},
-        fieldList: [
-          {
-            label: '院内系统',
-            value: 'SystemCode',
-            type: 'select',
-            list: 'HospitalSystem'
-          },
+        fieldList: [ // 每一项定义
+          { label: '上报项目', value: 'ProjectId', type: 'select', list: 'Projects' },
           { label: '拼音码', value: 'Py', type: 'input' },
           { label: '显示删除', value: 'ShowDelete', type: 'slot' },
           { label: '', value: 'button', type: 'slot' }
@@ -148,8 +132,8 @@ export default {
         pager: false,
         data: [],
         fieldList: [
-          { label: '院内系统', value: 'SystemName' },
-          { label: '字典编码', value: 'DefinitionCode' },
+          { label: '上报项目', value: 'ProjectId' },
+          { label: '字典编码', value: 'DefinitionId' },
           { label: '字典名称', value: 'DefinitionName' },
           { label: '拼音码', value: 'Py' },
           { label: '字典描述', value: 'DefinitionDesc' }
@@ -159,78 +143,77 @@ export default {
           label: '操作',
           width: '200',
           btList: [
-            {
-              label: '成员维护',
-              type: 'primary',
-              icon: 'el-icon-ship',
-              event: 'memberMaintainBtn',
-              show: true
-            },
-            {
-              label: '删除',
-              event: 'deleteTableRow',
-              show: true
-            }
+            { label: '删除', type: 'primary', icon: 'el-icon-ship', event: 'tableDelete', show: true },
+            { label: '成员维护', type: 'primary', icon: 'el-icon-ship', event: 'memberMaintainBtn', show: true }
           ]
+        }
+
+      },
+      // 过滤相关配置
+      filterInfo: {
+        query: {
+          ProjectId: '1',
+          page: 1,
+          rows: 100
         }
       }
     }
   },
-
+  computed: {
+    ProjectId() {
+      return this.$store.getters.ProjectId
+    },
+    toPy() {
+      return this.form.DefinitionName
+    }
+  },
+  watch: {
+    toPy: function(newVal) {
+      this.form.Py = this.$py.getCamelChars(newVal)
+    }
+  },
   mounted() {
     this.updateTable()
     this.initSelect()
   },
   methods: {
     async initSelect() {
-      this.select.HospitalSystem = await this.$store.dispatch(
-        'select/GetSelect',
-        'HospitalSystem'
-      )
+      this.select.Projects = await this.$store.dispatch('select/GetProjects')
     },
 
-    HospitalDictsModifyModels(formName) {
-      this.formInfo.ref.validate(valid => {
+    ReportDictsModifyModels(formName) {
+      this.formInfo.ref.validate((valid) => {
         if (valid) {
-          HospitalDictsModifyModels({
-            ...this.formInfo.data,
-            ProjectId: this.ProjectId
-          }).then(res => {
+          ReportDictsModifyModels({ ...this.formInfo.data, ProjectId: this.ProjectId }).then(res => {
             this.$message('保存成功')
           })
         }
       })
     },
-    HospitalDictsAddModels() {
-      this.$refs.ruleForm.validate(valid => {
+    ReportDictsAddModels() {
+      this.$refs.ruleForm.validate((valid) => {
         if (valid) {
-          const SystemName = getDictName(
-            this.select.HospitalSystem,
-            this.form.SystemCode
-          )
-          HospitalDictsAddModels({
-            ...this.form,
-            SystemName
-          }).then(res => {
-            // this.$store.dispatch('report/SetDefinition', this.form)
+          ReportDictsAddModels({ ...this.form, ProjectId: this.ProjectId }).then(res => {
+            this.$store.dispatch('report/SetDefinition', this.form)
             this.$message('保存成功')
           })
         }
       })
     },
     memberMaintainBtn(rows) {
+      console.log(rows, '<------')
       this.$emit('update:rows', rows)
       this.$emit('update:memberMaintainVisible', true)
     },
+    tableDelete(rows) {
+      const { DefinitionId } = rows
+      ReportDictsRemoveModels({ DefinitionId }).then(res => {
+        this.$message('删除成功')
+        this.updateTable()
+      })
+    },
     updateTable(ref) {
       this.tableInfo.refresh = Math.random()
-    },
-
-    async deleteTableRow(data) {
-      const res = await HospitalDictsRemoveModels({ DefinitionId: data.DefinitionId })
-      const msg = data.DeleteFlag ? '恢复成功' : '删除成功'
-      if (res === 1) this.$message(msg)
-      this.updateTable()
     },
 
     handleEvent(event, data) {
@@ -245,4 +228,5 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+
 </style>

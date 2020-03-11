@@ -35,3 +35,4 @@
         calssName
         hidden
         event: 指定事件  可以在 handleEvent获取到你指定的事件 然后判断事件来处理
+        required  设置必填项 如果有多项验证规则 请使用rules

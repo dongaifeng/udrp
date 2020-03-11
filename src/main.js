@@ -15,10 +15,9 @@ import router from './router'
 import '@/icons' // icon
 import '@/permission' // permission control
 
-const pinyin = require('js-pinyin')
-pinyin.setOptions({ checkPolyphone: false, charCase: 0 })
-
-Vue.prototype.$py = pinyin
+// 自定义全局方法
+import global from './utils/global'
+Vue.use(global)
 
 /**
  * If you don't want to use mock-server

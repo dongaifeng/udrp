@@ -44,7 +44,6 @@
           :handle="tableInfo.handle"
           @handleClick="handleClick"
           @handleEvent="handleEvent"
-          @selectFile="handleBtnClick"
           @el-selection-change="selectionChange"
         >
           <!-- 自定义插槽显示状态 -->
@@ -159,6 +158,7 @@
 
     <!-- sql显示弹框 -->
     <el-dialog
+      v-if="innerVisible"
       width="30%"
       title="SQL建立脚本"
       :visible.sync="innerVisible"
@@ -176,14 +176,12 @@
 </template>
 
 <script>
-import CompForm from '@/components/CompForm'
-import CompHeader from '@/components/CompHeader'
-import CompTable from '@/components/CompTable'
-import { GetDataItemsList, AddDataItemsTables, DataItemsAddModels, ProduceSql, AddTableList } from '@/api/report'
+import base from '@/mixin/base'
+import { GetDataItemsList, AddDataItemsTables, DataItemsRemoveModels, DataItemsAddModels, ProduceSql, AddTableList } from '@/api/report'
 import { mapGetters } from 'vuex'
 import clip from '@/utils/clipboard' // use clipboard directly
 export default {
-  components: { CompForm, CompHeader, CompTable },
+  mixins: [base],
   data() {
     const rules = {
       DataItemName: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
@@ -269,7 +267,7 @@ export default {
           label: '操作',
           width: '200',
           btList: [
-            { label: '删除', type: 'primary', icon: 'el-icon-ship', event: 'selectFile', show: true }
+            { label: '删除', type: 'primary', icon: 'el-icon-ship', event: 'deleteTableRow', show: true }
           ]
         }
 
@@ -341,6 +339,9 @@ export default {
     findIndex(arr, name) {
       return arr.findIndex(item => item.value === name)
     },
+    async deleteTableRow(data) {
+      this.delete(DataItemsRemoveModels, { DataItemId: data.DataItemId }, data.DeleteFlag)
+    },
     DataItemsAddModels() {
       this.$refs.rulesForm.validate((valid) => {
         if (valid) {
@@ -366,13 +367,6 @@ export default {
     selectionChange(rows) {
       console.log(rows)
       this.TableList = rows
-    },
-    handleBtnClick(data) {
-      console.log('data-------handleBtnClick', data)
-    },
-
-    handleClick(a) {
-      console.log(a, '<----------handleClick')
     },
 
     DataTypeChange(data) {
@@ -403,11 +397,8 @@ export default {
     },
     HandworkChange(data) {
       this.formInfo.fieldList[4].hidden = !data
-    },
-    handleEvent(event, data) {
-      console.log(event, data)
-      if (typeof this[event] === 'function') this[event](data)
     }
+
   }
 }
 </script>

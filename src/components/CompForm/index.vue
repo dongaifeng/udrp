@@ -4,11 +4,11 @@
     class="page-form"
     :class="className"
     :model="formData"
-    :rules="rules"
+    :rules="_rules"
     :label-width="labelWidth"
   >
     <el-row>
-      <el-col v-for="(item, index) in fieldList.filter(item => !item.hidden) " :key="index" :span="item.span || span">
+      <el-col v-for="(item, index) in fieldList.filter(item => !item.hidden) " :key="index" :span="parseInt(item.span) || span" :required="createRules(item)">
         <el-form-item
           :prop="item.value"
           :label="item.label"
@@ -35,7 +35,7 @@
             :type="item.type"
             :disabled="item.disabled"
             :placeholder="getPlaceholder(item)"
-            :autosize="item.autosize || {minRows: 2, maxRows: 10}"
+            :autosize="item.autosize || {minRows: 4, maxRows: 10}"
             @focus="handleEvent(item.event)"
           />
           <!-- 复选框 -->
@@ -135,6 +135,11 @@ export default {
     return {
     }
   },
+  computed: {
+    _rules() {
+      return this.rules
+    }
+  },
   watch: {
     formData: {
       handler: function(val) {
@@ -172,6 +177,16 @@ export default {
     // 派发按钮点击事件
     handleClick(event, data) {
       this.$emit('handleClick', event, data)
+    },
+    createRules(item) {
+      if (item.required) {
+        console.log(item)
+        const obj = { required: true, message: `请输入${item.label}`, trigger: 'blur,change' }
+        if (!this._rules[item.value]) {
+          this._rules[item.value] = [obj]
+        }
+      }
+      return null
     }
   }
 }

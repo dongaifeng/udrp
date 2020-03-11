@@ -74,13 +74,12 @@
 </template>
 
 <script>
-import CompTable from '@/components/CompTable'
 import ProjectDefinition from './components/ProjectDefinition'
 import ServiceList from './components/ServiceList'
 import ContentsTable from './components/ContentsTable'
 import { reportedGetLIst, ProjectsRemoveModels } from '@/api/report'
 export default {
-  components: { CompTable, ProjectDefinition, ServiceList, ContentsTable },
+  components: { ProjectDefinition, ServiceList, ContentsTable },
   data() {
     return {
       reportedGetLIst,

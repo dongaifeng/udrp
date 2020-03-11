@@ -39,7 +39,6 @@
           :handle="tableInfo.handle"
           @handleClick="handleClick"
           @handleEvent="handleEvent"
-          @selectFile="handleBtnClick"
         >
           <!-- 自定义插槽显示状态 -->
 
@@ -77,7 +76,7 @@
           </el-form-item>
 
           <el-form-item>
-            <el-button type="primary" @click="ServicesMAddModels">保存</el-button>
+            <el-button type="primary" @click="ServicesAddModels">保存</el-button>
           </el-form-item>
         </el-form>
       </el-col>
@@ -87,12 +86,10 @@
 </template>
 
 <script>
-import CompForm from '@/components/CompForm'
-import CompHeader from '@/components/CompHeader'
-import CompTable from '@/components/CompTable'
-import { GetServicesList, ServicesModifyProjects, ServicesMAddModels } from '@/api/report'
+import { GetServicesList, ServicesModifyProjects, ServicesAddModels, ServicesRemoveModels } from '@/api/report'
+import base from '@/mixin/base'
 export default {
-  components: { CompForm, CompHeader, CompTable },
+  mixins: [base],
   data() {
     const rules = {
       ServiceCode: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
@@ -104,7 +101,8 @@ export default {
       GetServicesList,
       rules,
       form: {
-        IsEnabled: 1
+        IsEnabled: 1,
+        ServiceName: ''
       },
       select: {
         EsbServer: [],
@@ -142,14 +140,14 @@ export default {
           { label: '服务描述', value: 'MonitorRouteId' },
           { label: '拼音码', value: 'Py' },
           { label: '监控路由', value: 'ProjectId' },
-          { label: '启用标志', value: 'IsEnabled', type: 'state', list: [{ 0: '启用' }, { 1: '禁用' }] }
+          { label: '启用标志', value: 'IsEnabled', type: 'state', list: this.$store.state.select.EnabledState }
         ],
         handle: {
           fixed: 'right',
           label: '操作',
           width: '200',
           btList: [
-            { label: '删除', type: 'primary', icon: 'el-icon-ship', event: 'selectFile', show: true }
+            { label: '删除', type: 'primary', icon: 'el-icon-ship', event: 'deleteTableRow', show: true }
           ]
         }
 
@@ -167,6 +165,14 @@ export default {
   computed: {
     ProjectId() {
       return this.$store.getters.ProjectId
+    },
+    toPy() {
+      return this.form.ServiceName
+    }
+  },
+  watch: {
+    toPy: function(newVal) {
+      this.form.Py = this.$py.getCamelChars(newVal)
     }
   },
   mounted() {
@@ -187,12 +193,13 @@ export default {
         }
       })
     },
-    ServicesMAddModels() {
+    ServicesAddModels() {
       this.$refs.ruleForm.validate((valid) => {
         if (valid) {
-          ServicesMAddModels({ ...this.form, ProjectId: this.ProjectId }).then(res => {
+          ServicesAddModels({ ...this.form, ProjectId: this.ProjectId }).then(res => {
             this.$store.dispatch('report/SetServiceId', res)
             this.$message('保存成功')
+            this.updateTable()
           })
         }
       })
@@ -200,23 +207,16 @@ export default {
     updateTable(ref) {
       this.tableInfo.refresh = Math.random()
     },
+    async deleteTableRow(data) {
+      const res = await ServicesRemoveModels({ ServiceId: data.ServiceId })
+      const msg = data.DeleteFlag ? '恢复成功' : '删除成功'
+      if (res === 1) this.$message(msg)
+      this.updateTable()
+    },
 
-    handleBtnClick(data) {
-      console.log('data', data)
-    },
-    handleEvent(event, data) {
-      // this[event](data)
-      switch (event) {
-        case 'list':
-          console.log(data)
-      }
-    },
     async EsbServerChange(EsbServerId) {
       this.select.OutPutNode = await this.$store.dispatch('select/GetOutPutNode', { EsbServerId })
       this.select.MonitoringRoute = await this.$store.dispatch('select/GetMonitoringRoute', { EsbServerId })
-    },
-    handleClick(a) {
-      console.log(a)
     }
   }
 }

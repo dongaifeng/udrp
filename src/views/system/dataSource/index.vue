@@ -3,7 +3,7 @@
     <el-row :gutter="20">
       <el-col style="margin-bottom: 10px;">
         <el-button type="primary">新建</el-button>
-        <el-checkbox v-model="tableInfo.query.ShowEnabled">显示禁用</el-checkbox>
+        <el-checkbox v-model="tableInfo.query.ShowDelete" @change="updateTable">显示删除</el-checkbox>
       </el-col>
       <el-col :span="16">
         <!-- 表格 -->
@@ -13,24 +13,16 @@
           :refresh="tableInfo.refresh"
           :init-curpage="tableInfo.initCurpage"
           :data.sync="tableInfo.data"
-          :check-box="false"
+          tab-index
           :api="DataSourcesGetList"
           :pager="false"
-          :query="form"
+          :query="formInfo.query"
           :field-list="tableInfo.fieldList"
           :list-type-info="selects"
           :handle="tableInfo.handle"
           @handleClick="handleClick"
           @handleEvent="handleEvent"
-        >
-          <!-- 自定义插槽显示状态 -->
-          <template v-slot:col-myslot="scope">
-            <el-select v-model="form.region" placeholder="请选择">
-              <el-option label="Zone one" value="shanghai" />
-              <el-option label="Zone two" value="beijing" />
-            </el-select>
-          </template>
-        </comp-table>
+        />
       </el-col>
 
       <el-col :span="8">
@@ -46,7 +38,7 @@
         >
           <!-- 自定义插槽的使用 -->
         </comp-form>
-        <el-button>测试连接</el-button>
+        <el-button :disabled="DataSourceId===''" @click="TestDataSources">测试连接</el-button>
         <el-button type="primary" @click="DataSourcesAddModels">保存</el-button>
       </el-col>
     </el-row>
@@ -57,12 +49,13 @@
 import CompTable from '@/components/CompTable'
 import CompHeader from '@/components/CompHeader'
 import CompForm from '@/components/CompForm'
-import { DataSourcesGetList, DataSourcesAddModels } from '@/api/system'
+import { DataSourcesGetList, DataSourcesAddModels, DataSourcesRemoveModels, TestDataSources } from '@/api/system'
 export default {
   components: { CompTable, CompHeader, CompForm },
   data() {
     return {
       DataSourcesGetList,
+      DataSourceId: '',
       selects: {
         DataBaseType: [],
         DataSourcesType: []
@@ -70,7 +63,9 @@ export default {
       // 表单相关
       formInfo: {
         ref: null, // 可以拿到el-form
-        data: {},
+        data: {
+          StrConnection: this.StrConnection
+        },
         fieldList: [
           {
             label: '数据库类型',
@@ -89,7 +84,7 @@ export default {
           { label: '登录名', value: 'Login', type: 'input' },
           { label: '密码', value: 'Password', type: 'input' },
           { label: '数据库', value: 'Database', type: 'input' },
-          { label: '连接字符串', value: 'StrConnection', type: 'textarea' }
+          { label: '连接字符串', value: 'StrConnection', type: 'textarea', disabled: true, autosize: { minRows: 5, maxRows: 10 }}
         ],
         rules: {
           DbTypeCode: [
@@ -122,9 +117,7 @@ export default {
       // 表格相关
       tableInfo: {
         refresh: 0,
-        query: {
-          ShowEnabled: true
-        },
+        query: { ShowDelete: true },
         initTable: true,
         initCurpage: 1,
         pager: false,
@@ -142,14 +135,24 @@ export default {
           btList: [
             {
               label: '删除',
-              type: 'primary',
-              icon: 'el-icon-ship',
-              event: 'selectFile',
+
+              event: 'deleteTableRow',
               show: true
             }
           ]
         }
       }
+    }
+  },
+  computed: {
+    StrConnection() {
+      const { ServerName, Login, Password, Database } = this.formInfo.data
+      return `Data Source=${ServerName};database=${Database};USER ID=${Login};PASSWORD=${Password};`
+    }
+  },
+  watch: {
+    StrConnection: function(newVal) {
+      this.formInfo.data.StrConnection = newVal
     }
   },
   mounted() {
@@ -175,6 +178,7 @@ export default {
               message: '保存成功!',
               type: 'success'
             })
+            this.DataSourceId = res
           })
         }
       })
@@ -183,17 +187,29 @@ export default {
     updateTable() {
       this.tableInfo.refresh = Math.random()
     },
-    onCancel() {
-      this.$message({
-        message: 'cancel!',
-        type: 'warning'
+    async deleteTableRow(data) {
+      const res = await DataSourcesRemoveModels({ DataSourceId: data.DataSourceId })
+      const msg = data.DeleteFlag ? '恢复成功' : '删除成功'
+      if (res === 1) this.$message(msg)
+      this.updateTable()
+    },
+    TestDataSources() {
+      const DataSourceId = this.DataSourceId
+      if (!DataSourceId) {
+        this.$message('请先保存服务器')
+        return false
+      }
+      TestDataSources({ DataSourceId }).then(res => {
+        this.$message(res)
       })
     },
-    handleBtnClick(data) {
-      console.log('data', data)
+    handleEvent(event, data) {
+      if (typeof this[event] === 'function') this[event](data)
     },
-    handleEvent() {},
-    handleClick() {}
+
+    handleClick(event, data) {
+      if (typeof this[event] === 'function') this[event](data)
+    }
   }
 }
 </script>
