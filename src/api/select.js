@@ -79,11 +79,11 @@ export function GetDataSources(params) {
   })
 }
 
-export function GetMonitoringRoute(params) {
+export function GetMonitoringRoute(data) {
   return request({
     url: '/api/Selects/GetMonitoringRoute',
-    method: 'get',
-    params
+    method: 'post',
+    data
   })
 }
 export function GetEsbServer(params) {
@@ -94,13 +94,13 @@ export function GetEsbServer(params) {
   })
 }
 // 下载模板
-export function DownloadTemplate(params) {
-  return request({
-    url: 'api/Files/DownloadTemplate',
-    method: 'get',
-    params
-  })
-}
+// export function DownloadTemplate(params) {
+//   return request({
+//     url: 'api/Files/DownloadTemplate',
+//     method: 'get',
+//     params
+//   })
+// }
 
 export function GetOutPutNode(data) {
   return request({

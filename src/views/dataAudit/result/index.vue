@@ -4,7 +4,7 @@
       <el-row>
         <el-col :span="4">
           <el-form-item label="上报机构">
-            <el-select v-model="form.ReportOrganCode" placeholder="请选择">
+            <el-select v-model="form.ReportOrganCode" clearable placeholder="请选择">
               <el-option v-for="item in selects.projects" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
             </el-select>
           </el-form-item>
@@ -12,7 +12,7 @@
 
         <el-col :span="4">
           <el-form-item label="推送项目">
-            <el-select v-model="form.ProjectId" placeholder="请选择" @change="pushProjectsChange">
+            <el-select v-model="form.ProjectId" clearable placeholder="请选择" @change="pushProjectsChange">
               <el-option v-for="item in selects.pushProjects" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
             </el-select>
           </el-form-item>
@@ -20,7 +20,7 @@
 
         <el-col :span="4">
           <el-form-item label="数据表">
-            <el-select v-model="form.DataTableId" placeholder="请选择">
+            <el-select v-model="form.DataTableId" clearable placeholder="请选择">
               <el-option v-for="item in selects.DataTables" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
             </el-select>
           </el-form-item>
@@ -34,7 +34,7 @@
 
         <el-col :span="4">
           <el-form-item label="状态">
-            <el-select v-model="form.AuditStatus" placeholder="请选择">
+            <el-select v-model="form.AuditStatus" clearable placeholder="请选择">
               <el-option v-for="item in selects.AuditState" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
             </el-select>
           </el-form-item>
@@ -66,6 +66,9 @@
       @el-row-dblclick="toUploadPage"
     >
       <!-- 自定义插槽显示状态 -->
+      <template v-slot:col-AUDIT_STATUS="slotProps">
+        {{ getDictName(selects.AuditState, slotProps.row.AUDIT_STATUS ) }}
+      </template>
 
     </comp-table>
 
@@ -75,11 +78,13 @@
 <script>
 import CompTable from '@/components/CompTable'
 import { GetAuditResultList } from '@/api/dataAudit'
+import { getDictName } from '@/utils'
 export default {
   components: { CompTable },
   data() {
     return {
       GetAuditResultList,
+      getDictName,
       selects: {
         AuditState: [],
         projects: [],
@@ -96,16 +101,16 @@ export default {
         pager: false,
         data: [],
         fieldList: [
-          { label: '上报机构', value: 'ClassCode' },
-          { label: '项目名称', value: 'ClassCode' },
-          { label: '数据表', value: 'ProjectCode' },
+          { label: '上报机构', value: 'CLASS_NAME' },
+          { label: '项目名称', value: 'PROJECT_NAME' },
+          { label: '数据表', value: 'DATA_TABLE_NAME' },
           { label: '批次号', value: 'BATCH_NO' },
-          { label: '状态', value: 'AUDIT_STATUS' },
+          { label: '状态', value: 'AUDIT_STATUS', type: 'slot' },
           { label: '填报次数', value: 'FILL_IN_TIMES' },
           { label: '提交时间', value: 'COMMITED_DATE_TIME' },
           { label: '提交人', value: 'COMMITED_USER_NAME' },
-          { label: '审核次数', value: 'ReadWay' },
-          { label: '审核时间', value: 'ProjectLeader' },
+          { label: '审核次数', value: 'ADUDIT_TIMES' },
+          { label: '审核时间', value: 'AUDITED_DATE_TIME' },
           { label: '审核人', value: 'AUDITED_USER_NAME' },
           { label: '上传次数', value: 'UPLOAD_TIMES' },
           { label: '上传时间', value: 'UPLOADED_DATE_TIME' },

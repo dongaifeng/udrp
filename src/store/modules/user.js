@@ -51,7 +51,8 @@ const actions = {
   // 获取用户信息
   getInfo({ commit, state }) {
     return new Promise((resolve, reject) => {
-      getInfo({ UserID: '1' }).then(response => {
+      getInfo().then(response => {
+        // TODO
         const userInfo = response
         if (!userInfo) {
           reject('没有用户信息，请重新登录')

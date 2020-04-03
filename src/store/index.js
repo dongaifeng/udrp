@@ -8,6 +8,7 @@ import user from './modules/user'
 import tagsView from './modules/tagsView'
 import select from './modules/select'
 import report from './modules/report'
+import dashboard from './modules/dashboard'
 
 Vue.use(Vuex)
 
@@ -18,6 +19,7 @@ const store = new Vuex.Store({
     settings,
     user,
     tagsView,
+    dashboard,
     report,
     select
   },

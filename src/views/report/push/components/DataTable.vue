@@ -19,14 +19,14 @@
     <el-row>
       <CompHeader context="数据表列表">
         <template v-slot:right>
-          <el-button type="primary">新建数据表</el-button>
+          <el-button type="primary" @click="clearForm">新建数据表</el-button>
         </template>
       </CompHeader>
       <el-col :span="16">
         <!-- 列表 -->
         <comp-table
           :listen-height="false"
-          :height="'500px'"
+          :height="'calc(100vh - 580px)'"
           :refresh="tableInfo.refresh"
           :init-curpage="tableInfo.initCurpage"
           :data.sync="tableInfo.data"
@@ -34,12 +34,13 @@
           :tab-index="true"
           :api="GetDataTableList"
           :pager="false"
-          :query="filterInfo.query"
+          :query="{ ProjectId }"
           :field-list="tableInfo.fieldList"
           :list-type-info="select"
           :handle="tableInfo.handle"
           @handleClick="handleClick"
           @handleEvent="handleEvent"
+          @el-row-dblclick="rowDblClick"
         >
           <!-- 自定义插槽显示状态 -->
 
@@ -51,12 +52,12 @@
         <CompHeader context="编辑" />
 
         <el-form ref="DataTableForm" :rules="rules" :model="addForm" label-width="100px">
-          <el-form-item label="数据表名称" prop="DataTableName">
-            <el-input v-model="addForm.DataTableName" />
+          <el-form-item label="数据表名称" prop="DataTableCode">
+            <el-input v-model="addForm.DataTableCode" />
           </el-form-item>
 
-          <el-form-item label="数据表" prop="DataTableCode">
-            <el-input v-model="addForm.DataTableCode" />
+          <el-form-item label="数据表" prop="DataTableName">
+            <el-input v-model="addForm.DataTableName" />
           </el-form-item>
 
           <el-form-item label="拼音码" prop="Py">
@@ -64,11 +65,11 @@
           </el-form-item>
 
           <el-form-item label="描述">
-            <el-input v-model="addForm.DataTableDesc" type="textarea" rows="10" />
+            <el-input v-model="addForm.DataTableDesc" type="textarea" rows="2" />
           </el-form-item>
 
           <el-form-item label="依托服务" prop="ServiceId">
-            <el-select v-model="addForm.ServiceId" placeholder="请选择活动区域">
+            <el-select v-model="addForm.ServiceId" clearable placeholder="请选择活动区域">
               <el-option v-for="item in select.PushService" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
             </el-select>
           </el-form-item>
@@ -89,7 +90,7 @@
 
 <script>
 import base from '@/mixin/base'
-import { GetDataTableList, AddDataTable, ModifyProjects, DataTablesRemoveModels } from '@/api/report'
+import { GetDataTableList, AddDataTable, DataTablesModifyModels, ModifyProjects, DataTablesRemoveModels, GetSourcesConfig } from '@/api/report'
 export default {
   mixins: [base],
   data() {
@@ -131,8 +132,8 @@ export default {
         pager: false,
         data: [],
         fieldList: [
-          { label: '数据表名称', value: 'DataTableName' },
-          { label: '数据表', value: 'DataTableCode' },
+          { label: '数据表名称', value: 'DataTableCode' },
+          { label: '数据表', value: 'DataTableName' },
           { label: '描述', value: 'DataTableDesc' },
           { label: '拼音码', value: 'Py' },
           { label: '启用标志', value: 'IsEnabled', type: 'state', list: this.$store.state.select.EnabledState }
@@ -147,15 +148,8 @@ export default {
           ]
         }
 
-      },
-      // 过滤相关配置
-      filterInfo: {
-        query: {
-          ProjectId: '1',
-          page: 1,
-          rows: 100
-        }
       }
+
     }
   },
   computed: {
@@ -164,27 +158,46 @@ export default {
     },
     ServiceId() {
       return this.$store.getters.ServiceId
+    },
+    toPy() {
+      return this.addForm.DataTableName
     }
   },
-  mounted() {
+  watch: {
+    toPy: function(newVal) {
+      if (newVal) this.addForm.Py = this.$py.getCamelChars(newVal)
+    }
+  },
+  async mounted() {
+    await this.initSelect()
+    if (this.ProjectId) this.GetSourcesConfig()
     this.updateTable()
-    this.initSelect()
   },
   methods: {
     async initSelect() {
       this.select.DataSources = await this.$store.dispatch('select/GetDataSources')
       this.select.PushService = await this.$store.dispatch('select/GetPushService', { ProjectId: this.ProjectId })
+      return Promise.resolve()
     },
     ModifyProjects() {
       ModifyProjects({ ...this.formInfo.data, ProjectId: this.ProjectId, ServiceId: this.ServiceId }).then(res => {
         this.$message('保存成功')
       })
     },
+    GetSourcesConfig() {
+      GetSourcesConfig({ ProjectId: this.ProjectId }).then(res => {
+        this.formInfo.data.DataSourceId = res
+        this.DataSourceChange(res)
+      })
+    },
     AddDataTable(formName) {
       this.$refs.DataTableForm.validate((valid) => {
         if (valid) {
-          AddDataTable({ ...this.addForm, ProjectId: this.ProjectId }).then(res => {
+          const api = this.addForm.DataTableId ? DataTablesModifyModels : AddDataTable
+          api({ ...this.addForm, ProjectId: this.ProjectId }).then(res => {
             this.$message('保存成功')
+            this.updateTable()
+            this.clearForm()
           })
         }
       })
@@ -192,8 +205,17 @@ export default {
     updateTable(ref) {
       this.tableInfo.refresh = Math.random()
     },
-    toDataItem() {
+    toDataItem({ DataTableId }) {
+      this.$store.dispatch('report/SetDataTableId', DataTableId)
       this.$emit('changeTab', 'DataItem')
+    },
+    clearForm() {
+      this.addForm = {
+        IsEnabled: 1
+      }
+    },
+    rowDblClick(rows) {
+      this.addForm = rows
     },
     async deleteTableRow(data) {
       const res = await DataTablesRemoveModels({ DataTableId: data.DataTableId })
@@ -203,9 +225,11 @@ export default {
     },
 
     async DataSourceChange(ClassCode) {
+      console.log(ClassCode, '<=========ClassCode')
+      if (!ClassCode) return false
       const res = await this.$store.dispatch('select/GetPushSources', { ClassCode })
       const { ServerName, Database } = res[0]
-      this.formInfo.data = { ClassCode, ServerName, Database }
+      this.formInfo.data = { ... this.formInfo.data, ClassCode, ServerName, Database }
     }
 
   }

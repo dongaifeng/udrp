@@ -116,7 +116,7 @@
               :disabled=" item.label==='编辑' ? Boolean(scope.row.DeleteFlag) : item.disabled"
               :loading="scope.row[item.loading]"
               @click="handleClick(item.event, scope.row)"
-            >{{ item.label }}</el-button>
+            >{{ toLabel(item, scope.row ) }}</el-button>
 
           </template>
         </template>
@@ -216,7 +216,10 @@ export default {
     },
     // 列表数据
     data: {
-      type: Array
+      type: Array,
+      default: () => {
+        return []
+      }
     },
     // 监听高度
     listenHeight: {
@@ -306,7 +309,7 @@ export default {
 
           // 表头为动态时 回传表头信息
           if (this.autoHeader) {
-            const header = TabHeard.map(item => ({ label: item.DataItemName, value: item.DataItemCode }))
+            const header = TabHeard.map(item => ({ label: item.DataItemName, value: item.DataItemCode, width: item.ShowWidth }))
             this.$emit('update:fieldList', header)
           }
 
@@ -382,6 +385,13 @@ export default {
         boxH - tabOffT - navH - tagH - searchH - bottomH + 'px'
       // console.log('表格最大高度为:' + (boxH - navH - tagH - searchH - bottomH))
       return boxH - navH - tagH - searchH - bottomH
+    },
+    // 对表格的label 添加 函数 可根据rows 转换 label
+    toLabel(rows, data) {
+      if (typeof rows.label === 'function') {
+        return rows.label(data)
+      }
+      return rows.label
     }
   }
 }

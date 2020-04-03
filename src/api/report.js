@@ -55,6 +55,14 @@ export function GetServicesList(data) {
     data
   })
 }
+
+export function GetServicesGetProjects(data) {
+  return request({
+    url: '/Reported/Services/GetServiceConfig',
+    method: 'post',
+    data
+  })
+}
 export function ServicesModifyProjects(data) {
   return request({
     url: '/Reported/Services/ModifyProjects',
@@ -65,6 +73,13 @@ export function ServicesModifyProjects(data) {
 export function ServicesAddModels(data) {
   return request({
     url: '/Reported/Services/AddModels',
+    method: 'post',
+    data
+  })
+}
+export function ServicesModifyModels(data) {
+  return request({
+    url: '/Reported/Services/ModifyModels',
     method: 'post',
     data
   })
@@ -85,6 +100,13 @@ export function GetDataTableList(data) {
     data
   })
 }
+export function GetSourcesConfig(data) {
+  return request({
+    url: '/Reported/DataTables/GetSourcesConfig',
+    method: 'post',
+    data
+  })
+}
 
 export function ModifyProjects(data) {
   return request({
@@ -101,6 +123,13 @@ export function AddDataTable(data) {
     data
   })
 }
+export function DataTablesModifyModels(data) {
+  return request({
+    url: '/Reported/DataTables/ModifyModels',
+    method: 'post',
+    data
+  })
+}
 export function DataTablesRemoveModels(data) {
   return request({
     url: '/Reported/DataTables/RemoveModels',
@@ -108,10 +137,19 @@ export function DataTablesRemoveModels(data) {
     data
   })
 }
+
 // 数据项
 export function GetDataItemsList(data) {
   return request({
     url: '/Reported/DataItems/GetList',
+    method: 'post',
+    data
+  })
+}
+
+export function GetTableConfig(data) {
+  return request({
+    url: '/Reported/DataItems/GetTableConfig',
     method: 'post',
     data
   })
@@ -127,6 +165,13 @@ export function AddDataItemsTables(data) {
 export function DataItemsAddModels(data) {
   return request({
     url: '/Reported/DataItems/AddModels',
+    method: 'post',
+    data
+  })
+}
+export function DataItemsModifyModels(data) {
+  return request({
+    url: '/Reported/DataItems/ModifyModels',
     method: 'post',
     data
   })
@@ -170,6 +215,13 @@ export function GetBatch(data) {
     data
   })
 }
+export function GetBatchRule(data) {
+  return request({
+    url: '/Reported/Batch/GetRule',
+    method: 'post',
+    data
+  })
+}
 export function AddBatchRule(data) {
   return request({
     url: '/Reported/Batch/AddBatchRule',
@@ -180,6 +232,13 @@ export function AddBatchRule(data) {
 export function AddBatchModels(data) {
   return request({
     url: '/Reported/Batch/AddModels',
+    method: 'post',
+    data
+  })
+}
+export function BatchModifyModels(data) {
+  return request({
+    url: '/Reported/Batch/ModifyModels',
     method: 'post',
     data
   })
@@ -225,6 +284,13 @@ export function ContentsModifyModels(data) {
 export function ContentsRemoveModels(data) {
   return request({
     url: '/Reported/Contents/RemoveModels',
+    method: 'post',
+    data
+  })
+}
+export function GetContentsConfig(data) {
+  return request({
+    url: '/Reported/Contents/GetContentsConfig',
     method: 'post',
     data
   })

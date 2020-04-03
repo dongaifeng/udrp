@@ -1,7 +1,7 @@
 <template>
   <div>
 
-    <CompHeader context="数据库服务设置">
+    <CompHeader context="数据库服务器设置">
       <template v-slot:right>
         <el-button type="primary" @click="ContentsModifyProjects">保存设置</el-button>
       </template>
@@ -17,16 +17,16 @@
     />
 
     <el-row>
-      <CompHeader context="数据表列表">
+      <CompHeader context="内容列表">
         <template v-slot:right>
-          <el-button type="primary">新建数据表</el-button>
+          <el-button type="primary" @click="clearForm">新建数据表</el-button>
         </template>
       </CompHeader>
       <el-col :span="16">
         <!-- 列表 -->
         <comp-table
           :listen-height="false"
-          :height="'500px'"
+          :height="'calc(100vh - 580px)'"
           :refresh="tableInfo.refresh"
           :init-curpage="tableInfo.initCurpage"
           :data.sync="tableInfo.data"
@@ -41,6 +41,7 @@
           @handleClick="handleClick"
           @handleEvent="handleEvent"
           @selectFile="handleBtnClick"
+          @el-row-dblclick="rowDblClick"
         >
           <!-- 自定义插槽显示状态 -->
 
@@ -53,7 +54,7 @@
 
         <el-form ref="DataTableForm" :rules="rules" :model="addForm" label-width="100px">
           <el-form-item label="内容类型" prop="ContentType">
-            <el-select v-model="addForm.ContentType" placeholder="请选择活动区域">
+            <el-select v-model="addForm.ContentType" clearable placeholder="请选择活动区域">
               <el-option v-for="item in select.ContentType" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
             </el-select>
           </el-form-item>
@@ -71,7 +72,7 @@
           </el-form-item>
 
           <el-form-item label="SQL脚本" prop="SqlContent">
-            <el-input v-model="addForm.SqlContent" type="textarea" rows="10" />
+            <el-input v-model="addForm.SqlContent" type="textarea" rows="6" />
           </el-form-item>
 
           <el-form-item label="启用标志">
@@ -92,7 +93,7 @@
 import CompForm from '@/components/CompForm'
 import CompHeader from '@/components/CompHeader'
 import CompTable from '@/components/CompTable'
-import { ContentsGetList, ContentsAddModels, ContentsModifyProjects, ContentsRemoveModels } from '@/api/report'
+import { ContentsGetList, ContentsAddModels, ContentsModifyProjects, ContentsRemoveModels, GetContentsConfig, ContentsModifyModels } from '@/api/report'
 export default {
   components: { CompForm, CompHeader, CompTable },
   data() {
@@ -108,7 +109,8 @@ export default {
       ContentsGetList,
       rules,
       addForm: {
-        IsEnabled: 1
+        IsEnabled: 1,
+        ReadContentId: null
       },
       select: {
         PushService: [],
@@ -138,11 +140,11 @@ export default {
         pager: false,
         data: [],
         fieldList: [
-          { label: '数据表名称', value: 'DataTableName' },
-          { label: '数据表', value: 'DataTableCode' },
-          { label: '描述', value: 'DataTableDesc' },
+          { label: '内容类型', value: 'ContentType' },
+          { label: '内容名', value: 'ContentName' },
+          { label: '中文名', value: 'ContentShowName' },
           { label: '拼音码', value: 'Py' },
-          { label: '启用标志', value: 'IsEnabled', type: 'state', list: [{ 0: '启用' }, { 1: '禁用' }] }
+          { label: '启用标志', value: 'IsEnabled', type: 'state', list: this.$store.state.select.EnabledState }
         ],
         handle: {
           fixed: 'right',
@@ -173,18 +175,27 @@ export default {
   },
   watch: {
     toPy: function(newVal) {
-      this.addForm.Py = this.$py.getCamelChars(newVal)
+      if (newVal) this.addForm.Py = this.$py.getCamelChars(newVal)
     }
   },
   mounted() {
     this.updateTable()
     this.initSelect()
+    if (this.ProjectId) this.GetContentsConfig()
   },
   methods: {
     async initSelect() {
       this.select.DataSources = await this.$store.dispatch('select/GetDataSources')
       this.select.ContentType = await this.$store.dispatch('select/GetSelect', 'ContentType')
       this.select.PushService = await this.$store.dispatch('select/GetPushService', { ProjectId: this.ProjectId })
+    },
+
+    GetContentsConfig() {
+      GetContentsConfig({ ProjectId: this.ProjectId }).then(res => {
+        console.log(res, '<-----------')
+        this.formInfo.data = res
+        this.DataSourceChange(res.DataSourceId)
+      })
     },
     ContentsModifyProjects() {
       ContentsModifyProjects({ ...this.formInfo.data, ProjectId: this.ProjectId, ServiceId: this.ServiceId }).then(res => {
@@ -194,21 +205,34 @@ export default {
     ContentsAddModels(formName) {
       this.$refs.DataTableForm.validate((valid) => {
         if (valid) {
-          ContentsAddModels({ ...this.addForm, ProjectId: this.ProjectId }).then(res => {
+          const api = this.addForm.ReadContentId ? ContentsModifyModels : ContentsAddModels
+          api({ ...this.addForm, ProjectId: this.ProjectId }).then(res => {
             this.$message('保存成功')
+            this.clearForm()
+            this.updateTable()
           })
         }
       })
     },
     ContentsRemoveModels(rows) {
-      const { ReadContentId } = rows
+      const { ReadContentId, DeleteFlag } = rows
       ContentsRemoveModels({ ReadContentId }).then(res => {
-        this.$message('删除成功')
+        const msg = DeleteFlag ? '恢复成功' : '删除成功'
+        if (res === 1) this.$message(msg)
         this.updateTable()
       })
     },
     updateTable(ref) {
       this.tableInfo.refresh = Math.random()
+    },
+
+    rowDblClick(rows) {
+      this.addForm = rows
+    },
+    clearForm() {
+      this.addForm = {
+        IsEnabled: 1
+      }
     },
 
     handleBtnClick(data) {
@@ -218,9 +242,10 @@ export default {
       if (typeof this[event] === 'function') this[event](data)
     },
     async DataSourceChange(ClassCode) {
+      if (!ClassCode) return false
       const res = await this.$store.dispatch('select/GetPushSources', { ClassCode })
       const { ServerName, Database } = res[0]
-      this.formInfo.data = { ClassCode, ServerName, Database }
+      this.formInfo.data = { ... this.formInfo.data, ClassCode, ServerName, Database }
     },
     handleClick(event, data) {
       if (typeof this[event] === 'function') this[event](data)

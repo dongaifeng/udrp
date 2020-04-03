@@ -28,7 +28,7 @@
       </el-col>
       <el-col :span="12">
         <el-form label-width="120px" :model="formInfo.data">
-          <el-form-item label="活动名称">
+          <el-form-item label="项目描述">
             <el-input
               v-model="formInfo.data.ProjectDesc"
               type="textarea"
@@ -73,31 +73,32 @@ export default {
           ProjectShortName: '',
           ProjectCode: '',
           ReadWay: [],
-          IsEnabled: 1
+          Sort: '0',
+          IsEnabled: 1,
+          SaveLogDays: '0'
         },
         fieldList: [
-          { label: '上报机构', value: 'ProjectCode', type: 'select', list: 'GetProjects' },
-          { label: '项目编码', value: 'ReportOrganCode', type: 'input' },
+          { label: '上报机构', value: 'ReportOrganCode', type: 'select', list: 'GetProjects' },
+          { label: '项目编码', value: 'ProjectCode', type: 'input' },
           { label: '项目简称', value: 'ProjectShortName', type: 'input' },
           { label: '标签全称', value: 'ProjectName', type: 'input' },
           { label: '拼音码', value: 'Py', type: 'input' },
 
           { label: '调阅方式', value: 'ReadWay', type: 'slot' },
           { label: '院方负责人', value: 'ProjectLeader', type: 'input' },
-          { label: '输出类型', value: 'status', type: 'select', list: 'OutPutType' },
           { label: '日志保存天数', value: 'SaveLogDays', type: 'input' },
           { label: '显示顺序', value: 'Sort', type: 'input' },
           { label: '启用标志', value: 'IsEnabled', type: 'slot' }
         ],
         rules: {
-          ProjectCode: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
-          ReportOrganCode: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
-          ProjectShortName: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
-          ProjectName: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
-          Py: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
-          status: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
-          SaveLogDays: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
-          Sort: [{ required: true, message: '请输入活动名称', trigger: 'blur' }]
+          ProjectCode: [{ required: true, message: '请输入 ', trigger: 'blur' }],
+          ReportOrganCode: [{ required: true, message: '请输入 ', trigger: 'blur' }],
+          ProjectShortName: [{ required: true, message: '请输入 ', trigger: 'blur' }],
+          ProjectName: [{ required: true, message: '请输入 ', trigger: 'blur' }],
+          Py: [{ required: true, message: '请输入 ', trigger: 'blur' }],
+          status: [{ required: true, message: '请输入 ', trigger: 'blur' }],
+          SaveLogDays: [{ required: true, message: '请输入 ', trigger: 'blur' }],
+          Sort: [{ required: true, message: '请输入 ', trigger: 'blur' }]
         }
       }
     }
@@ -114,7 +115,14 @@ export default {
   },
   mounted() {
     this.initSelect()
-    if (this.editData) this.formInfo.data = this.editData
+    if (this.editData) {
+      console.log(typeof this.editData.ReadWay, this.editData.ReadWay)
+      if (this.editData.ReadWay && typeof this.editData.ReadWay === 'string') {
+        this.editData.ReadWay = this.editData.ReadWay.split(',')
+      }
+
+      this.formInfo.data = this.editData
+    }
   },
   methods: {
     addProject(formName) {
@@ -125,6 +133,8 @@ export default {
           const api = this.state === 'add' ? ProjectsAddModels : ProjectsModifyModels
           api(data).then(res => {
             this.$store.dispatch('report/SetProjectId', res)
+            this.$emit('update:state', 'modify')
+            this.$emit('updateTable')
             this.$message('保存成功')
           })
         }

@@ -4,7 +4,7 @@
       <el-row>
         <el-col :span="6">
           <el-form-item label="上报机构">
-            <el-select v-model="form.ReportOrganCode" placeholder="请选择上报机构">
+            <el-select v-model="form.ReportOrganCode" clearable placeholder="请选择">
               <el-option
                 v-for="item in selects.projects"
                 :key="item.ClassCode"
@@ -49,23 +49,29 @@
       @el-row-dblclick="tableEdit"
     >
       <!-- 自定义插槽显示状态 -->
+      <template v-slot:col-ReportOrganCode="slotProps">
+        {{ getDictName(selects.projects, slotProps.row.ReportOrganCode) }}
+      </template>
     </comp-table>
     <!-- 新建 -->
     <el-dialog
       v-if="createProjectVisible"
-      title="编辑推送项目"
+      :close-on-click-modal="false"
+      title="编辑调阅项目"
       :visible.sync="createProjectVisible"
       custom-class="no-padding"
-      width="80%"
+      width="90%"
+      top="7vh"
+      @close="tabClose"
     >
-      <el-tabs type="border-card" tab-position="bottom">
+      <el-tabs v-model="activeTab" :before-leave="tabLeave" type="border-card" tab-position="bottom">
         <el-tab-pane lazy label="项目定义">
-          <ProjectDefinition :edit-data="editData" :state="state" />
+          <ProjectDefinition :edit-data="editData" :state.sync="state" @updateTable="updateTable" />
         </el-tab-pane>
-        <el-tab-pane lazy label="服务列表">
+        <el-tab-pane name="ServiceList" lazy label="服务列表">
           <ServiceList />
         </el-tab-pane>
-        <el-tab-pane lazy label="内容列表">
+        <el-tab-pane name="ContentsTable" lazy label="内容列表">
           <ContentsTable />
         </el-tab-pane>
       </el-tabs>
@@ -78,11 +84,14 @@ import ProjectDefinition from './components/ProjectDefinition'
 import ServiceList from './components/ServiceList'
 import ContentsTable from './components/ContentsTable'
 import { reportedGetLIst, ProjectsRemoveModels } from '@/api/report'
+import { getDictName } from '@/utils'
 export default {
   components: { ProjectDefinition, ServiceList, ContentsTable },
   data() {
     return {
       reportedGetLIst,
+      getDictName,
+      activeTab: '',
       createProjectVisible: false,
       editData: null,
       state: 'add',
@@ -94,7 +103,7 @@ export default {
         ReportOrganCode: '',
         ProjectType: 'READ',
         ShowDelete: false,
-        ShowEnabled: false
+        ShowEnabled: true
       },
       // 表格相关
       tableInfo: {
@@ -104,16 +113,14 @@ export default {
         pager: false,
         data: [],
         fieldList: [
-          { label: '上报机构', value: 'ClassCode' },
+          { label: '上报机构', value: 'ReportOrganCode', type: 'slot' },
           { label: '项目编号', value: 'ProjectCode' },
           { label: '项目简称', value: 'ProjectShortName' },
-          { label: '状态', value: 'Status' },
           { label: '项目全称', value: 'ProjectName' },
           { label: '项目描述', value: 'ProjectDesc' },
           { label: '拼音码', value: 'Py' },
           { label: '调阅方式', value: 'ReadWay' },
           { label: '项目负责人', value: 'ProjectLeader' },
-          { label: '输出类型', value: 'TaskOutType' },
           { label: '日志保存天数', value: 'SaveLogDays' },
           {
             label: '启用标志',
@@ -153,6 +160,7 @@ export default {
   mounted() {
     this.updateTable()
     this.initSelect()
+    this.$store.dispatch('report/SetProjectId', '')
   },
   methods: {
     async initSelect() {
@@ -164,17 +172,7 @@ export default {
       //   this.projectList = res
       // })
     },
-    submit(formName) {
-      this.formInfo.ref.validate(valid => {
-        if (valid) {
-          alert('submit!')
-          console.log(this.formInfo.data)
-        } else {
-          console.log('error submit!!')
-          return false
-        }
-      })
-    },
+
     updateTable(ref) {
       this.tableInfo.refresh = Math.random()
     },
@@ -189,6 +187,7 @@ export default {
       if (typeof this[event] === 'function') this[event](data)
     },
     tableEdit(rows) {
+      this.$store.dispatch('report/SetProjectId', rows.ProjectId)
       this.state = 'modify'
       this.editData = rows
       this.createProjectVisible = true
@@ -204,6 +203,34 @@ export default {
         this.$message('删除成功')
         this.updateTable()
       })
+    },
+    tabClose() {
+      this.updateTable()
+      this.activeTab = '0'
+    },
+    tabLeave(activeName, oldActiveName) {
+      const ProjectId = this.$store.getters.ProjectId
+      const that = this
+      const fn = function() {
+        if (ProjectId) {
+          return true
+        } else {
+          that.$message('请确定已保存')
+          return false
+        }
+      }
+      // ServiceList, ContentsTable
+      switch (activeName) {
+        case 'ServiceList':
+          return fn()
+          break
+        case 'ContentsTable':
+          return fn()
+          break
+
+        default:
+          return true
+      }
     }
   }
 }

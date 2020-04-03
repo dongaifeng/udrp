@@ -1,9 +1,9 @@
 const report = {
   namespaced: true,
   state: {
-    ProjectId: '35',
-    DataTableId: '2',
-    ServiceId: '2',
+    ProjectId: '',
+    DataTableId: '',
+    ServiceId: '',
     Definition: {}
   },
   mutations: {

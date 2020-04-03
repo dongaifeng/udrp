@@ -345,6 +345,7 @@ export function getTime(type) {
 }
 
 /**
+ * 防抖
  * @param {Function} func
  * @param {number} wait
  * @param {boolean} immediate
@@ -352,7 +353,6 @@ export function getTime(type) {
  */
 export function debounce(func, wait, immediate) {
   let timeout, args, context, timestamp, result
-
   const later = function() {
     // 据上一次触发时间间隔
     const last = +new Date() - timestamp
@@ -452,5 +452,30 @@ export function removeClass(ele, cls) {
   if (hasClass(ele, cls)) {
     const reg = new RegExp('(\\s|^)' + cls + '(\\s|$)')
     ele.className = ele.className.replace(reg, ' ')
+  }
+}
+
+export function debounce2(func, wait, immediate) {
+  let timeout
+
+  return function() {
+    const context = this
+    const args = arguments
+    // 先清理定时器
+    if (timeout) clearTimeout(timeout)
+
+    // 判断要不要立即执行，如果要，就定义callNow = ！timeout，只有等到wait时间后 才能再次调用
+    if (immediate) {
+      var callNow = !timeout
+      timeout = setTimeout(() => {
+        timeout = null
+      }, wait)
+      if (callNow) func.apply(context, args)
+      // 如果不立即调用，就等到wait时间后调用，如果在等待期间用户又点击了，在开始是clearTimeout，重新开始流程
+    } else {
+      timeout = setTimeout(() => {
+        func.apply(context, args)
+      }, wait)
+    }
   }
 }

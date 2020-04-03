@@ -13,7 +13,7 @@ export function filterAsyncRoutes(routes = []) {
   routes.forEach(route => {
     const { FuncName, Url, FuncIcon, FuncID, ParentID, FuncType, Component, FuncCode } = route
     const item = {}
-    item.path = Url || ''
+    item.path = Url || '/404'
     item.component = FuncType === '1' ? Layout : resolve => require([`@/views${Component}`], resolve)
     item.name = FuncCode || ''
     item.meta = {}

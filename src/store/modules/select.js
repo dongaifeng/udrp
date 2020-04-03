@@ -1,4 +1,4 @@
-import { GetSelect, GetEsbServer, GetServiceName, GetOutPutNode, GetMonitoringRoute, GetDataSources, GetPushSources, GetPushService, GetProjectsDataItem, GetDataTables, GetProjects } from '@/api/select'
+import { GetSelect, GetEsbServer, GetServiceName, GetOutPutNode, GetMonitoringRoute, GetDataItems, GetDataSources, GetPushSources, GetPushService, GetProjectsDataItem, GetDataTables, GetProjects } from '@/api/select'
 const state = {
   ReportOrgan: [],
   DataSources: [],
@@ -9,17 +9,18 @@ const state = {
   ControlType: [],
   PushService: [],
   OutPutType: [],
+  DataItems: [],
   ReadType: [],
-  AuditState: [],
+  ListAuditState: [],
   FillStyle: [],
   Projects: [],
   HospitalSystem: [],
-  DataItems: [],
+  AuditState: [],
   SystemConfig: [],
   DataSourcesType: [],
   DataBaseType: [],
   MonitoringRoute: [],
-  EnabledState: { 0: '启用', 1: '禁用' }
+  EnabledState: { 1: '启用', 0: '禁用' }
 }
 
 const mutations = {
@@ -43,11 +44,14 @@ const actions = {
   // 特殊字典获取方法
   async GetEsbServer({ commit, state }, DictCode = 'EsbServer') {
     return new Promise(async(resolve) => {
-      if (state.EsbServer.length === 0) {
-        const res = await GetEsbServer()
-        commit('SET_SELECT', { DictCode, res })
-      }
-      resolve(state.EsbServer)
+      const res = await GetEsbServer()
+      resolve(res)
+    })
+  },
+  async GetDataItems({ commit, state }, DictCode = 'DataItems') {
+    return new Promise(async(resolve) => {
+      const res = await GetDataItems()
+      resolve(res)
     })
   },
 
@@ -73,11 +77,8 @@ const actions = {
 
   async GetDataSources({ commit, state }, DictCode = 'DataSources') {
     return new Promise(async(resolve) => {
-      if (state[DictCode].length === 0) {
-        const res = await GetDataSources()
-        commit('SET_SELECT', { DictCode, res })
-      }
-      resolve(state[DictCode])
+      const res = await GetDataSources()
+      resolve(res)
     })
   },
 
@@ -100,11 +101,8 @@ const actions = {
 
   async GetPushService({ commit, state }, data, DictCode = 'PushService') {
     return new Promise(async(resolve) => {
-      if (state[DictCode].length === 0) {
-        const res = await GetPushService(data)
-        commit('SET_SELECT', { DictCode, res })
-      }
-      resolve(state[DictCode])
+      const res = await GetPushService(data)
+      resolve(res)
     })
   },
 

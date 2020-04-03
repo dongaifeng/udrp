@@ -18,11 +18,11 @@
     >
       <!-- 自定义插槽的使用 -->
       <template v-slot:form-Database>
-        <el-checkbox v-model="formInfo.data.YearFlag" :true-label="1" :false-label="0">年</el-checkbox>
-        <el-checkbox v-model="formInfo.data.HalfYearFlag" :true-label="1" :false-label="0">半年</el-checkbox>
-        <el-checkbox v-model="formInfo.data.QuarterFlag" :true-label="1" :false-label="0">季</el-checkbox>
-        <el-checkbox v-model="formInfo.data.MonthFlag" :true-label="1" :false-label="0">月</el-checkbox>
-        <el-checkbox v-model="formInfo.data.DayFlag" :true-label="1" :false-label="0">日</el-checkbox>
+        <el-checkbox v-model="formInfo.data.YearFlag" :true-label="1" :false-label="0" @change="createDesc">年</el-checkbox>
+        <el-checkbox v-model="formInfo.data.HalfYearFlag" :true-label="1" :false-label="0" @change="createDesc">半年</el-checkbox>
+        <el-checkbox v-model="formInfo.data.QuarterFlag" :true-label="1" :false-label="0" @change="createDesc">季</el-checkbox>
+        <el-checkbox v-model="formInfo.data.MonthFlag" :true-label="1" :false-label="0" @change="createDesc">月</el-checkbox>
+        <el-checkbox v-model="formInfo.data.DayFlag" :true-label="1" :false-label="0" @change="createDesc">日</el-checkbox>
 
       </template>
 
@@ -41,7 +41,7 @@
         <!-- 列表 -->
         <comp-table
           :listen-height="false"
-          :height="'500px'"
+          :height="'calc(100vh - 560px)'"
           :refresh="tableInfo.refresh"
           :init-curpage="tableInfo.initCurpage"
           :data.sync="tableInfo.data"
@@ -49,12 +49,13 @@
           :tab-index="true"
           :api="GetBatchList"
           :pager="false"
-          :query="filterInfo.query"
+          :query="{ProjectId}"
           :field-list="tableInfo.fieldList"
           :list-type-info="select"
           :handle="tableInfo.handle"
           @handleClick="handleClick"
           @handleEvent="handleEvent"
+          @el-row-dblclick="rowDblClick"
         >
           <!-- 自定义插槽显示状态 -->
 
@@ -74,8 +75,7 @@
             <el-date-picker
               v-model="addForm.StartDate"
               type="date"
-              format="yyyy-mm-dd"
-              value-format="yyyy-mm-dd"
+              value-format="yyyy-MM-dd"
               placeholder="选择日期"
             />
           </el-form-item>
@@ -84,8 +84,7 @@
             <el-date-picker
               v-model="addForm.EndDate"
               type="date"
-              format="yyyy-mm-dd"
-              value-format="yyyy-mm-dd"
+              value-format="yyyy-MM-dd"
               placeholder="选择日期"
             />
           </el-form-item>
@@ -102,7 +101,7 @@
 
 <script>
 import base from '@/mixin/base'
-import { AddBatchRule, GetBatchList, GetBatch, AddBatchModels, BatchRemoveModels } from '@/api/report'
+import { AddBatchRule, GetBatchList, GetBatch, GetBatchRule, AddBatchModels, BatchModifyModels, BatchRemoveModels } from '@/api/report'
 import { mapGetters } from 'vuex'
 export default {
   mixins: [base],
@@ -116,7 +115,8 @@ export default {
     return {
       GetBatchList,
       rules,
-      addForm: {},
+      addForm: {
+      },
       select: {
         PushService: [],
         Period: [],
@@ -136,9 +136,9 @@ export default {
         },
         fieldList: [ // 每一项定义
           { label: '上报周期', value: 'ReportCycle', type: 'select', list: 'Period' },
-          { label: '自动创建', value: 'AutoFlag', type: 'checkbox', span: 3 },
-          { label: '规则', value: 'Database', type: 'slot', span: 8 },
-          { label: '连接符', value: 'ConnStri', type: 'input' },
+          { label: '自动创建', value: 'AutoFlag', type: 'checkbox', span: 2 },
+          { label: '规则', value: 'Database', type: 'slot', span: 10 },
+          { label: '连接符', value: 'ConnStri', type: 'input', span: 5 },
           { label: '规则描述', value: 'RuleDesc', type: 'input', disabled: true },
           { label: '范例说明', value: 'txt', type: 'slot', span: 10 }
         ],
@@ -167,20 +167,13 @@ export default {
           label: '操作',
           width: '200',
           btList: [
-            { label: '查看记录', type: 'primary', icon: 'el-icon-ship', event: 'selectFile', show: true },
+            { label: '查看记录', type: 'primary', icon: 'el-icon-ship', event: 'toPushRecord', show: true },
             { label: '删除', type: 'primary', icon: 'el-icon-ship', event: 'deleteTableRow', show: true }
           ]
         }
 
-      },
-      // 过滤相关配置
-      filterInfo: {
-        query: {
-          ProjectId: '1',
-          page: 1,
-          rows: 100
-        }
       }
+
     }
   },
   computed: {
@@ -191,11 +184,17 @@ export default {
   mounted() {
     this.updateTable()
     this.initSelect()
+    this.GetBatchRule()
   },
   methods: {
     async initSelect() {
       this.select.Period = await this.$store.dispatch('select/GetSelect', 'Period')
       this.select.PushService = await this.$store.dispatch('select/GetPushService', { ProjectId: '1' })
+    },
+
+    async GetBatchRule() {
+      const BatchRule = await GetBatchRule({ ProjectId: this.ProjectId })
+      this.formInfo.data = { ...this.formInfo.data, ...BatchRule }
     },
 
     AddBatchRule() {
@@ -214,14 +213,41 @@ export default {
         this.addForm = res
       })
     },
+    toPushRecord(rows) {
+      this.$router.push({ path: '/monitor/pushRecord', query: rows })
+    },
+
+    clearForm() {
+      this.addForm = {}
+    },
+    rowDblClick(rows) {
+      this.addForm = rows
+    },
 
     AddBatchModels() {
       this.$refs.BatchForm.validate((valid) => {
         if (valid) {
-          AddBatchModels({ ...this.addForm, ProjectId: this.ProjectId }).then(res => {
+          const api = this.addForm.RrbId ? BatchModifyModels : AddBatchModels
+          api({ ...this.addForm, ProjectId: this.ProjectId }).then(res => {
             this.$message('保存成功')
+            this.updateTable()
+            this.clearForm()
           })
         }
+      })
+    },
+    createDesc() {
+      this.$nextTick(function() {
+        const { YearFlag, HalfYearFlag, QuarterFlag, MonthFlag, DayFlag, ConnStri } = this.formInfo.data
+
+        const year = YearFlag ? `[年]+'${ConnStri}'+` : ''
+        const HalfYear = HalfYearFlag ? `[半年]+'${ConnStri}'+` : ''
+        const Quarter = QuarterFlag ? `[季]+'${ConnStri}'+` : ''
+        const Month = MonthFlag ? `[月]+'${ConnStri}'+` : ''
+        const Day = DayFlag ? '[日]' : ''
+        const str = year + HalfYear + Quarter + Month + Day
+
+        this.formInfo.data.RuleDesc = str.slice(0, str.lastIndexOf(']') + 1)
       })
     },
     updateTable(ref) {

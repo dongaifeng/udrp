@@ -5,7 +5,7 @@
 
         <el-col :span="4">
           <el-form-item label="调阅项目">
-            <el-select v-model="form.ProjectId" placeholder="请选择" @change="readProjectsChange">
+            <el-select v-model="form.ProjectId" clearable placeholder="请选择" @change="readProjectsChange">
               <el-option v-for="item in selects.readProjects" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
             </el-select>
           </el-form-item>
@@ -13,7 +13,7 @@
 
         <el-col :span="3">
           <el-form-item label="类别">
-            <el-select v-model="form.Readway" placeholder="请选择" @change="readProjectsChange">
+            <el-select v-model="form.Readway" clearable placeholder="请选择" @change="readProjectsChange">
               <el-option v-for="item in selects.ReadType" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
             </el-select>
           </el-form-item>
@@ -21,7 +21,7 @@
 
         <el-col :span="4">
           <el-form-item label="名称">
-            <el-select v-model="form.ServerId" placeholder="请选择">
+            <el-select v-model="form.ServerId" clearable placeholder="请选择">
               <el-option v-for="item in selects.ServiceName" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
             </el-select>
           </el-form-item>
@@ -80,6 +80,10 @@
     >
       <!-- 自定义插槽显示状态 -->
 
+      <template v-slot:col-READ_WAY="slotProps">
+        {{ getDictName(selects.ReadType, slotProps.row.READ_WAY ) }}
+      </template>
+
     </comp-table>
 
     <!-- 详情 -->
@@ -87,6 +91,7 @@
       v-if="detailVisible"
       title="查看详细内容"
       :visible.sync="detailVisible"
+      :close-on-click-modal="false"
       custom-class="no-padding"
       width="90%"
       @close="detailClose"
@@ -97,7 +102,7 @@
       <comp-table
         v-if="DataStyle === 'TABLE'"
         :listen-height="false"
-        :height="'600px'"
+        :height="'calc(100vh - 400px)'"
         :refresh="tableInfo2.refresh"
         :init-curpage="tableInfo2.initCurpage"
         :data.sync="tableInfo2.data"
@@ -108,7 +113,11 @@
         <!-- 自定义插槽显示状态 -->
       </comp-table>
 
-      <div v-if="DataStyle === 'FORM'">{{ xml }}</div>
+      <div v-if="DataStyle === 'TEXT'" readonly>
+        <textarea readonly style="width:100%;height: 500px;">
+          {{ xml }}
+        </textarea>
+      </div>
     </el-dialog>
 
   </div>
@@ -116,11 +125,13 @@
 
 <script>
 import { GetReadRecordList, GetReadRecord } from '@/api/monitor'
+import { getDictName } from '@/utils'
 export default {
   data() {
     return {
       GetReadRecordList,
       GetReadRecord,
+      getDictName,
       detailVisible: false,
       DataStyle: '',
       xml: '',
@@ -142,12 +153,12 @@ export default {
         data: [],
         fieldList: [
           { label: '调阅项目', value: 'PROJECT_NAME' },
-          { label: '类别', value: 'READ_WAY' },
+          { label: '类别', value: 'READ_WAY', type: 'slot' },
           { label: '标识', value: 'IDENTITY' },
           { label: '服务名', value: 'SERVICE_NAME' },
-          { label: '调阅请求时间', value: 'READ_REQUEST_TIMES' },
-          { label: '调阅响应时间', value: 'READ_RESPONSE_TIMES' },
-          { label: '调阅查询条件', value: 'READ_CONDITION' }
+          { label: '调阅请求时间', value: 'REQUEST_DATE_TIME' },
+          { label: '调阅响应时间', value: 'RESPONSE_DATE_TIME' },
+          { label: '调阅查询条件', value: 'SERACH_CONDITIONS' }
         ],
         handle: {
           fixed: 'right',
@@ -194,26 +205,29 @@ export default {
     },
 
     initByRoute() {
-      console.log(this.$route.query)
+      console.log(this.$route.query, 'dkfjvkdfhvaaaaaaaaaaaa')
       this.form.ProjectId = this.$route.query.PROJECT_ID
       this.form.Readway = this.$route.query.READ_WAY
+      this.form.ServerId = this.$route.query.SERVICE_OR_CONTNET_ID
       if (this.form.ProjectId && this.form.Readway) this.readProjectsChange()
       this.$nextTick(function() {
-        this.form.ServerId = this.$route.query.SERVICE_ID
+        // this.form.ServerId = this.$route.query.SERVICE_ID
       })
     },
 
     detail(rows) {
-      this.detailVisible = true
-      GetReadRecord({ RruId: rows.RRB_ID }).then(res => {
-        const { DataStyle, DataContent } = res
-        this.DataStyle = DataStyle
-        if (DataStyle === 'TABLE') {
-          const data = JSON.parse(DataContent)
-          this.tableInfo2.fieldList = Object.keys(data[0]).map(val => ({ label: val, value: val }))
-          this.tableInfo2.data = data
-        } else {
-          this.xml = DataContent
+      GetReadRecord({ RrrId: rows.RRR_ID }).then(res => {
+        const { DataStyle = 'xml', DataContent = '无详细内容' } = res
+        if (res.DataStyle && res.DataContent) {
+          this.detailVisible = true
+          this.DataStyle = DataStyle
+          if (DataStyle === 'TABLE') {
+            const data = JSON.parse(DataContent)
+            this.tableInfo2.fieldList = Object.keys(data[0]).map(val => ({ label: val, value: val }))
+            this.tableInfo2.data = data
+          } else {
+            this.xml = DataContent
+          }
         }
       })
     },

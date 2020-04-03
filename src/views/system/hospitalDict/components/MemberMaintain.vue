@@ -12,7 +12,7 @@
           @handleEvent="handleEvent"
         >
           <template v-slot:form-DeleteFlag>
-            <el-checkbox v-model="formInfo.data.DeleteFlag" />
+            <el-checkbox v-model="formInfo.data.ShowDelete" />
           </template>
 
           <template v-slot:form-button>
@@ -22,6 +22,7 @@
             <comp-upload
               action="/System/HospitalDictMembers/Import"
               :data="formInfo.data"
+              :on-success="updateTable"
               :label="'导入'"
             />
           </template>
@@ -38,12 +39,13 @@
           :tab-index="true"
           :api="HospitalDictsMembersGetList"
           :pager="false"
-          :query="formInfo.data"
+          :query="{Py: formInfo.data.Py, ShowDelete: formInfo.data.ShowDelete, DefinitionCode: formInfo.data.DefinitionCode}"
           :field-list="tableInfo.fieldList"
           :list-type-info="select"
           :handle="tableInfo.handle"
           @handleClick="handleClick"
           @handleEvent="handleEvent"
+          @el-row-dblclick="rowDblClick"
         >
           <!-- 自定义插槽显示状态 -->
         </comp-table>
@@ -92,20 +94,22 @@ import {
   HospitalDictsMembersGetList,
   HospitalDictsMembersModifyModels,
   HospitalDictsMembersAddModels,
-  HospitalDictsMembersRemoveModels
-
+  HospitalDictsMembersRemoveModels,
+  DownloadTemplate
 } from '@/api/system'
-import { DownloadTemplate } from '@/api/select'
+// import { DownloadTemplate } from '@/api/select'
+import base from '@/mixin/base'
 export default {
+  mixins: [base],
   props: {
     rows: [Object]
   },
   data() {
     const rules = {
-      MemberCode: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
-      MemberName: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
-      Py: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
-      Sort: [{ required: true, message: '请输入活动名称', trigger: 'blur' }]
+      MemberCode: [{ required: true, message: '请输入  ', trigger: 'blur' }],
+      MemberName: [{ required: true, message: '请输入  ', trigger: 'blur' }],
+      Py: [{ required: true, message: '请输入  ', trigger: 'blur' }],
+      Sort: [{ required: true, message: '请输入  ', trigger: 'blur' }]
     }
     return {
       HospitalDictsMembersGetList,
@@ -114,6 +118,7 @@ export default {
       loading: false,
       form: {
         IsEnabled: 1,
+        Sort: 0,
         DefinitionName: this.rows.DefinitionName
       },
       select: {
@@ -122,6 +127,9 @@ export default {
       formInfo: {
         ref: null,
         data: {
+          ShowDelete: false,
+          DefinitionId: '',
+          DefinitionName: ''
 
         },
         fieldList: [
@@ -143,7 +151,7 @@ export default {
         pager: false,
         data: [],
         fieldList: [
-          { label: '院内字典', value: 'DefinitionName' },
+          { label: '院内字典', value: 'DefinitionCode' },
           { label: '成员编码', value: 'MemberCode' },
           { label: '成员名称', value: 'MemberName' },
           { label: '拼音码', value: 'Py' },
@@ -163,19 +171,19 @@ export default {
     ProjectId() {
       return this.$store.getters.ProjectId
     },
-    toPy() {
+    toPy2() {
       return this.form.MemberName
     }
   },
   watch: {
-    toPy: function(newVal) {
-      this.form.Py = this.$py.getCamelChars(newVal)
+    toPy2: function(newVal) {
+      if (newVal) this.form.Py = this.$py.getCamelChars(newVal)
     }
   },
   mounted() {
     this.updateTable()
     this.initSelect()
-    const { Py, ...another } = this.rows
+    const { Py, ShowDelete, ...another } = this.rows
     this.formInfo.data = another
   },
   methods: {
@@ -183,32 +191,29 @@ export default {
       this.select.Projects = await this.$store.dispatch('select/GetProjects')
     },
 
-    HospitalDictsMembersModifyModels(formName) {
-      this.formInfo.ref.validate(valid => {
-        if (valid) {
-          HospitalDictsMembersModifyModels({
-            ...this.formInfo.data,
-            ProjectId: this.ProjectId
-          }).then(res => {
-            this.$message('保存成功')
-          })
-        }
-      })
-    },
     HospitalDictsMembersAddModels() {
       this.$refs.ruleForm.validate(valid => {
         if (valid) {
           const { SystemCode, DefinitionCode } = this.rows
-          HospitalDictsMembersAddModels({ ...this.form, SystemCode, DefinitionCode }).then(
-            res => {
-              this.$message('保存成功')
+          const api = this.form.MemberId ? HospitalDictsMembersModifyModels : HospitalDictsMembersAddModels
+          api({ ...this.form, SystemCode, DefinitionCode }).then(res => {
+            this.$message('保存成功')
+            this.updateTable()
+            this.form = {
+              IsEnabled: 1,
+              Sort: 0,
+              DefinitionName: this.rows.DefinitionName
             }
+          }
           )
         }
       })
     },
     updateTable(ref) {
       this.tableInfo.refresh = Math.random()
+    },
+    rowDblClick(rows) {
+      this.form = { ...rows }
     },
 
     async deleteTableRow(data) {

@@ -27,7 +27,11 @@ export default {
       default: true
     },
     chartData: {
-      type: Object,
+      type: Array,
+      required: true
+    },
+    range: {
+      type: Array,
       required: true
     }
   },
@@ -40,7 +44,14 @@ export default {
     chartData: {
       deep: true,
       handler(val) {
+        console.log(val, '--------')
         this.setOptions(val)
+      }
+    },
+    range: {
+      deep: true,
+      handler(val) {
+        this.setOptions2(val)
       }
     }
   },
@@ -61,74 +72,94 @@ export default {
       this.chart = echarts.init(this.$el, 'macarons')
       this.setOptions(this.chartData)
     },
-    setOptions({ expectedData, actualData } = {}) {
+
+    setOptions2(range = []) {
       this.chart.setOption({
         xAxis: {
-          data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-          boundaryGap: false,
+          data: range
+        }
+      })
+    },
+
+    setOptions(chartData = []) {
+      this.chart.setOption({
+        color: ['#c23531', '#2f4554', '#61a0a8', '#d48265', '#91c7ae', '#749f83', '#ca8622', '#bda29a', '#6e7074', '#546570', '#c4ccd3'],
+        textStyle: {
+          color: '#ddd'
+        },
+        // lineStyle: {
+        //   color: '#ddd'
+        // },
+        xAxis: {
+          // name: '时间(时) (显示最近24小时)',
+          // nameLocation: 'center',
+          // nameTextStyle: {
+          //   algin: 'center',
+          //   color: '#ddd'
+          // },
+          // splitLine: {
+          //   lineStyle: {
+          //     color: '#ddd'
+          //   }
+          // },
+          // nameGap: 25,
+          data: this.range,
+          boundaryGap: true,
           axisTick: {
             show: false
           }
         },
+        yAxis: {
+          name: '访问量(次)',
+          type: 'value',
+          axisTick: {
+            show: true
+          }
+        },
         grid: {
           left: 10,
-          right: 10,
-          bottom: 20,
-          top: 30,
+          right: 0,
+          bottom: 0,
+          top: 35,
           containLabel: true
         },
         tooltip: {
           trigger: 'axis',
           axisPointer: {
-            type: 'cross'
-          },
-          padding: [5, 10]
-        },
-        yAxis: {
-          axisTick: {
-            show: false
-          }
-        },
-        legend: {
-          data: ['expected', 'actual']
-        },
-        series: [{
-          name: 'expected', itemStyle: {
-            normal: {
-              color: '#FF005A',
-              lineStyle: {
-                color: '#FF005A',
-                width: 2
-              }
+            type: 'cross',
+            label: {
+              formatter: '{value} 时'
             }
           },
-          smooth: true,
-          type: 'line',
-          data: expectedData,
-          animationDuration: 2800,
-          animationEasing: 'cubicInOut'
+          padding: [5, 5]
+          // position: function(point, params, dom, rect, size) {
+          //   // 设置离鼠标位置
+          //   return [point[0] + 10, point[1] + 10]
+          // }
         },
-        {
-          name: 'actual',
-          smooth: true,
-          type: 'line',
-          itemStyle: {
-            normal: {
-              color: '#3888fa',
-              lineStyle: {
-                color: '#3888fa',
-                width: 2
-              },
-              areaStyle: {
-                color: '#f3f8ff'
-              }
-            }
-          },
-          data: actualData,
-          animationDuration: 2800,
-          animationEasing: 'quadraticOut'
-        }]
-      })
+
+        // legend: {
+        //   data: ['访问量']
+        // },
+        series: chartData
+        // series: [{
+        //   name: '访问量',
+        //   type: 'line',
+        //   itemStyle: {
+        //     normal: {
+        //       color: '#fff',
+        //       lineStyle: {
+        //         color: '#ddd',
+        //         width: 2
+        //       }
+        //     }
+        //   },
+        //   smooth: true,
+        //   data: chartData,
+        //   animationDuration: 500,
+        //   animationEasing: 'cubicInOut'
+        // }]
+      }, true)
     }
   }
 }

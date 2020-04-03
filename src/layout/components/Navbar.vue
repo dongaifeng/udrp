@@ -15,22 +15,22 @@
           <theme-picker class="right-menu-item hover-effect" @change="themeChange" />
         </el-tooltip> -->
 
-        <el-tooltip content="修改密码" effect="dark" placement="bottom"  >
+        <el-tooltip content="修改密码" effect="dark" placement="bottom">
           <div class="right-menu-item hover-effect" @click="dialogUpdatePwd = true">
-             <svg-icon :iconClass="'lock'" />
+            <svg-icon :icon-class="'lock'" />
             修改密码</div>
         </el-tooltip>
 
         <el-tooltip content="退出登录" effect="dark" placement="bottom">
           <div class="right-menu-item hover-effect" @click="logout">
-             <svg-icon :iconClass="'switch'" />
+            <svg-icon :icon-class="'switch'" />
             退出登录</div>
         </el-tooltip>
 
       </template>
 
       <!-- 头像 -->
-      <el-dropdown v-if='false' class="avatar-container right-menu-item hover-effect" trigger="hover">
+      <el-dropdown v-if="false" class="avatar-container right-menu-item hover-effect" trigger="hover">
         <div class="avatar-wrapper">
           <!-- 添加用名名称 -->
           <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
@@ -59,7 +59,7 @@
     </div>
 
     <!-- 修改密码窗口 -->
-    <el-dialog title="修改密码" :visible.sync="dialogUpdatePwd" width="30%" append-to-body>
+    <el-dialog title="修改密码" :visible.sync="dialogUpdatePwd" width="30%" :close-on-click-modal="false" append-to-body>
       <el-form ref="refUpdatePwd" :model="formUpdatePwd" :rules="rules">
         <el-form-item label="原密码" prop="pwd">
           <el-input v-model="formUpdatePwd.pwd" autocomplete="off" />
@@ -143,7 +143,8 @@ export default {
     submitUpdatePwd() {
       this.$refs.refUpdatePwd.validate((valid) => {
         if (valid) {
-          apiUpdatePwd(this.formUpdatePwd).then(res => {
+          const userName = this.$store.state.user.name
+          apiUpdatePwd({ ...this.formUpdatePwd, userName, updateBy: userName }).then(res => {
             this.dialogUpdatePwd = false
           })
         }

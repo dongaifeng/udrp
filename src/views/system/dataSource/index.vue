@@ -16,12 +16,13 @@
           tab-index
           :api="DataSourcesGetList"
           :pager="false"
-          :query="formInfo.query"
+          :query="tableInfo.query"
           :field-list="tableInfo.fieldList"
           :list-type-info="selects"
           :handle="tableInfo.handle"
           @handleClick="handleClick"
           @handleEvent="handleEvent"
+          @el-row-dblclick="rowDblClick"
         />
       </el-col>
 
@@ -38,7 +39,7 @@
         >
           <!-- 自定义插槽的使用 -->
         </comp-form>
-        <el-button :disabled="DataSourceId===''" @click="TestDataSources">测试连接</el-button>
+        <el-button @click="TestDataSources">测试连接</el-button>
         <el-button type="primary" @click="DataSourcesAddModels">保存</el-button>
       </el-col>
     </el-row>
@@ -46,12 +47,11 @@
 </template>
 
 <script>
-import CompTable from '@/components/CompTable'
-import CompHeader from '@/components/CompHeader'
-import CompForm from '@/components/CompForm'
-import { DataSourcesGetList, DataSourcesAddModels, DataSourcesRemoveModels, TestDataSources } from '@/api/system'
+import base from '@/mixin/base'
+import { getDictName } from '@/utils'
+import { DataSourcesGetList, DataSourcesAddModels, DataSourcesModifyModels, DataSourcesRemoveModels, TestDataSources } from '@/api/system'
 export default {
-  components: { CompTable, CompHeader, CompForm },
+  mixins: [base],
   data() {
     return {
       DataSourcesGetList,
@@ -64,7 +64,8 @@ export default {
       formInfo: {
         ref: null, // 可以拿到el-form
         data: {
-          StrConnection: this.StrConnection
+          StrConnection: this.StrConnection,
+          IsEnabled: '1'
         },
         fieldList: [
           {
@@ -88,28 +89,28 @@ export default {
         ],
         rules: {
           DbTypeCode: [
-            { required: true, message: '请输入活动名称', trigger: 'blur' }
+            { required: true, message: '请输入 ', trigger: 'blur' }
           ],
           DataSourceType: [
-            { required: true, message: '请输入活动名称', trigger: 'blur' }
+            { required: true, message: '请输入 ', trigger: 'blur' }
           ],
           DataSourceName: [
-            { required: true, message: '请输入活动名称', trigger: 'blur' }
+            { required: true, message: '请输入 ', trigger: 'blur' }
           ],
           ServerName: [
-            { required: true, message: '请输入活动名称', trigger: 'blur' }
+            { required: true, message: '请输入 ', trigger: 'blur' }
           ],
           Login: [
-            { required: true, message: '请输入活动名称', trigger: 'blur' }
+            { required: true, message: '请输入 ', trigger: 'blur' }
           ],
           Password: [
-            { required: true, message: '请输入活动名称', trigger: 'blur' }
+            { required: true, message: '请输入 ', trigger: 'blur' }
           ],
           Database: [
-            { required: true, message: '请输入活动名称', trigger: 'blur' }
+            { required: true, message: '请输入 ', trigger: 'blur' }
           ],
           StrConnection: [
-            { required: true, message: '请输入活动名称', trigger: 'blur' }
+            { required: true, message: '请输入 ', trigger: 'blur' }
           ]
         }
       },
@@ -135,7 +136,6 @@ export default {
           btList: [
             {
               label: '删除',
-
               event: 'deleteTableRow',
               show: true
             }
@@ -170,22 +170,44 @@ export default {
         'DataSourcesType'
       )
     },
+
+    clearForm() {
+      this.formInfo.data = { StrConnection: this.StrConnection, IsEnabled: '0' }
+    },
+
     DataSourcesAddModels(formName) {
-      this.formInfo.ref.validate(valid => {
-        if (valid) {
-          DataSourcesAddModels(this.formInfo.data).then(res => {
-            this.$message({
-              message: '保存成功!',
-              type: 'success'
-            })
-            this.DataSourceId = res
-          })
-        }
+      const DbTypeName = getDictName(this.selects.DataBaseType, this.formInfo.data.DbTypeCode)
+      const api = this.formInfo.data.DataSourceId ? DataSourcesModifyModels : DataSourcesAddModels
+      this.submit({
+        api: api,
+        data: { ...this.formInfo.data, DbTypeName }
       })
+      // this.formInfo.ref.validate(valid => {
+      //   if (valid) {
+      //     const DbTypeName = getDictName(this.selects.DataBaseType, this.formInfo.data.DbTypeCode)
+
+      //     DataSourcesAddModels({ ...this.formInfo.data, DbTypeName }).then(res => {
+      //       this.$message({
+      //         message: '保存成功!',
+      //         type: 'success'
+      //       })
+      //       this.updateTable()
+      //       this.DataSourceId = res
+      //       this.formInfo.data = { StrConnection: this.StrConnection, IsEnabled: '0' }
+      //     })
+      //   }
+      // })
     },
 
     updateTable() {
       this.tableInfo.refresh = Math.random()
+    },
+    rowDblClick(rows) {
+      this.formInfo.data = {
+        StrConnection: this.StrConnection,
+        IsEnabled: '1',
+        ...rows
+      }
     },
     async deleteTableRow(data) {
       const res = await DataSourcesRemoveModels({ DataSourceId: data.DataSourceId })
@@ -194,14 +216,14 @@ export default {
       this.updateTable()
     },
     TestDataSources() {
-      const DataSourceId = this.DataSourceId
-      if (!DataSourceId) {
-        this.$message('请先保存服务器')
+      const { ServerName, Login, Password, Database } = this.formInfo.data
+      if (ServerName && Login && Password && Database) {
+        TestDataSources({ StrConnection: this.formInfo.data.StrConnection }).then(res => {
+          this.$message(res)
+        })
         return false
       }
-      TestDataSources({ DataSourceId }).then(res => {
-        this.$message(res)
-      })
+      this.$message('请先保存服务器')
     },
     handleEvent(event, data) {
       if (typeof this[event] === 'function') this[event](data)

@@ -22,6 +22,7 @@
           :handle="tableInfo.handle"
           @handleClick="handleClick"
           @handleEvent="handleEvent"
+          @el-row-dblclick="rowDblClick"
         />
       </el-col>
 
@@ -37,7 +38,7 @@
         >
           <!-- 自定义插槽的使用 -->
         </comp-form>
-        <el-button :disabled="EsbServerId === ''" @click="TestESBServers">测试连接</el-button>
+        <el-button @click="TestESBServers">测试连接</el-button>
         <el-button type="primary" @click="ESBServersAddModels">保存</el-button>
       </el-col>
     </el-row>
@@ -45,12 +46,10 @@
 </template>
 
 <script>
-import CompTable from '@/components/CompTable'
-import CompHeader from '@/components/CompHeader'
-import CompForm from '@/components/CompForm'
-import { ESBServersGetList, ESBServersAddModels, ESBServersRemoveModels, TestESBServers } from '@/api/system'
+import { ESBServersGetList, ESBServersAddModels, ESBServersModifyModels, ESBServersRemoveModels, TestESBServers } from '@/api/system'
+import base from '@/mixin/base'
 export default {
-  components: { CompTable, CompHeader, CompForm },
+  mixins: [base],
   data() {
     return {
       ESBServersGetList,
@@ -58,7 +57,7 @@ export default {
       // 表单相关
       formInfo: {
         ref: null, // 可以拿到el-form
-        data: {},
+        data: { IsEnabled: '1' },
         fieldList: [
           { label: 'ESB服务名称', value: 'EsbServerName', type: 'input' },
           { label: 'IP地址', value: 'Ip', type: 'input' },
@@ -68,17 +67,17 @@ export default {
         ],
         rules: {
           EsbServerName: [
-            { required: true, message: '请输入活动名称', trigger: 'blur' }
+            { required: true, message: '请输入 ', trigger: 'blur' }
           ],
-          Ip: [{ required: true, message: '请输入活动名称', trigger: 'blur' }],
+          Ip: [{ required: true, message: '请输入 ', trigger: 'blur' }],
           Port: [
-            { required: true, message: '请输入活动名称', trigger: 'blur' }
+            { required: true, message: '请输入 ', trigger: 'blur' }
           ],
           Account: [
-            { required: true, message: '请输入活动名称', trigger: 'blur' }
+            { required: true, message: '请输入 ', trigger: 'blur' }
           ],
           Password: [
-            { required: true, message: '请输入活动名称', trigger: 'blur' }
+            { required: true, message: '请输入 ', trigger: 'blur' }
           ]
         }
       },
@@ -96,7 +95,7 @@ export default {
         fieldList: [
           { label: 'ID', value: 'EsbServerId' },
           { label: 'ESB服务名称', value: 'EsbServerName' },
-          { label: 'IP', value: 'IP' },
+          { label: 'IP', value: 'Ip' },
           { label: '端口', value: 'Port' },
           { label: '用户名', value: 'Account' },
           { label: '密码', value: 'Password' }
@@ -121,21 +120,35 @@ export default {
   },
   methods: {
     ESBServersAddModels(formName) {
-      this.formInfo.ref.validate(valid => {
-        if (valid) {
-          ESBServersAddModels(this.formInfo.data).then(res => {
-            this.$message({
-              message: '保存成功!',
-              type: 'success'
-            })
-            this.EsbServerId = res
-          })
-        }
+      const api = this.formInfo.data.EsbServerId ? ESBServersModifyModels : ESBServersAddModels
+      this.submit({
+        api: api,
+        data: { ...this.formInfo.data },
+        fn: (res) => { this.EsbServerId = res }
       })
+
+      // this.formInfo.ref.validate(valid => {
+      //   if (valid) {
+      //     ESBServersAddModels(this.formInfo.data).then(res => {
+      //       this.$message({
+      //         message: '保存成功!',
+      //         type: 'success'
+      //       })
+      //       this.EsbServerId = res
+      //     })
+      //   }
+      // })
+    },
+
+    clearForm() {
+      this.formInfo.data = { IsEnabled: '1' }
     },
 
     updateTable() {
       this.tableInfo.refresh = Math.random()
+    },
+    rowDblClick(rows) {
+      this.formInfo.data = { ...rows }
     },
     async deleteTableRow(data) {
       const res = await ESBServersRemoveModels({ EsbServerId: data.EsbServerId })
@@ -144,12 +157,13 @@ export default {
       this.updateTable()
     },
     TestESBServers() {
-      const EsbServerId = this.EsbServerId
-      if (!EsbServerId) {
+      const { Account, Password, Port, Ip } = this.formInfo.data
+
+      if (!Port || !Account || !Password || !Ip) {
         this.$message('请先保存服务器')
         return false
       }
-      TestESBServers({ EsbServerId }).then(res => {
+      TestESBServers({ ...this.formInfo.data }).then(res => {
         this.$message(res)
       })
     },

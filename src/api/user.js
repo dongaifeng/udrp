@@ -15,7 +15,7 @@ export function login(data) {
 
 export function getInfo(data) {
   return request({
-    url: '/api/Login/GetUserInfo',
+    url: '/api/Menu/GetUserInfo',
     method: 'post',
     data
   })
@@ -32,13 +32,13 @@ export function apiUpdatePwd(data) {
   return request({
     url: '/api/Login/UpdatePwd',
     method: 'post',
-    data: { UserID: store.getters.UserID, ...data }
+    data
   })
 }
 
 export function getRoute(data) {
   return request({
-    url: '/api/Login/GetUserMenu',
+    url: '/api/Menu/GetUserMenu',
     method: 'post',
     data
   })

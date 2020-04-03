@@ -60,13 +60,13 @@
             v-if="item.type === 'select'"
             v-model="formData[item.value]"
             :disabled="item.disabled"
-            :clearable="item.clearable"
+            :clearable="!item.clearable"
             :filterable="item.filterable"
             :placeholder="getPlaceholder(item)"
             @change="handleEvent(item.event, formData[item.value])"
           >
             <el-option
-              v-for="(childItem, childIndex) in listTypeInfo[item.list]"
+              v-for="(childItem, childIndex) in (typeof item.list === 'string' ? listTypeInfo[item.list] : item.list)"
               :key="childIndex"
               :label="childItem.ClassName"
               :value="childItem.ClassCode"

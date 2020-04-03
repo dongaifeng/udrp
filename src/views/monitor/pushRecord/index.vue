@@ -5,7 +5,7 @@
 
         <el-col :span="4">
           <el-form-item label="推送项目">
-            <el-select v-model="form.ProjectId" placeholder="请选择" @change="pushProjectsChange">
+            <el-select v-model="form.ProjectId" clearable placeholder="请选择" @change="pushProjectsChange">
               <el-option v-for="item in selects.pushProjects" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
             </el-select>
           </el-form-item>
@@ -13,7 +13,7 @@
 
         <el-col :span="4">
           <el-form-item label="服务名">
-            <el-select v-model="form.ServerId" placeholder="请选择">
+            <el-select v-model="form.ServerId" clearable placeholder="请选择">
               <el-option v-for="item in selects.PushService" :key="item.ClassCode" :label="item.ClassName" :value="item.ClassCode" />
             </el-select>
           </el-form-item>
@@ -69,7 +69,7 @@
     <!-- 列表 -->
     <comp-table
       :listen-height="false"
-      :height="'calc(100vh - 180px)'"
+      :height="'calc(100vh - 250px)'"
       :refresh="tableInfo.refresh"
       :init-curpage="tableInfo.initCurpage"
       :data.sync="tableInfo.data"
@@ -92,6 +92,7 @@
     <!-- 详情 -->
     <el-dialog
       v-if="detailVisible"
+      :close-on-click-modal="false"
       title="查看详细内容"
       :visible.sync="detailVisible"
       custom-class="no-padding"
@@ -115,7 +116,11 @@
         <!-- 自定义插槽显示状态 -->
       </comp-table>
 
-      <div v-if="DataStyle === 'FORM'">{{ xml }}</div>
+      <div v-if="DataStyle === 'TEXT'">
+        <textarea readonly style="width:100%;height: 500px;">
+          {{ xml }}
+        </textarea>
+      </div>
     </el-dialog>
 
   </div>
@@ -139,7 +144,7 @@ export default {
         pushProjects: []
       },
       // 表单相关
-      form: {},
+      form: { ProjectId: '', ServerId: '' },
       // 表格相关
       tableInfo: {
         refresh: 0,
@@ -154,7 +159,7 @@ export default {
           { label: '服务名', value: 'SERVICE_NAME' },
           { label: '输出类型', value: 'CLASS_NAME' },
           { label: '上传时间', value: 'UPLOADED_DATE_TIME' },
-          { label: '上传人', value: 'UPLOADED_USER_ID' },
+          { label: '上传人', value: 'UPLOADED_USER_NAME' },
           { label: '是否成功', value: 'UPLOAD_STATUS' },
           { label: '异常结果反馈', value: 'RESULT_CONTENT' },
           { label: '备注说明', value: 'REMARK' }
@@ -194,30 +199,34 @@ export default {
     },
 
     async pushProjectsChange(ProjectId) {
-      console.log(ProjectId)
       this.selects.PushService = await this.$store.dispatch('select/GetPushService', { ProjectId })
     },
 
     initByRoute() {
-      this.form.ProjectId = this.$route.query.PROJECT_ID
+      const { BatchNo, BATCH_NO, ProjectId = null, PROJECT_ID = null, SERVICE_ID } = this.$route.query
+      this.form.BatchNo = BatchNo || BATCH_NO
+      this.form.ProjectId = ProjectId || PROJECT_ID
+      this.form.ServerId = SERVICE_ID
+
       if (this.form.ProjectId) this.pushProjectsChange(this.form.ProjectId)
       this.$nextTick(function() {
-        this.form.ServerId = this.$route.query.SERVICE_ID
+        // this.form.ServerId = this.$route.query.SERVICE_ID
       })
     },
 
     detail(rows) {
-      this.detailVisible = true
-      GetPushRecord({ RruId: rows.RRB_ID }).then(res => {
-        console.log(res)
-        const { DataStyle, DataContent } = res
-        this.DataStyle = DataStyle
-        if (DataStyle === 'TABLE') {
-          const data = JSON.parse(DataContent)
-          this.tableInfo2.fieldList = Object.keys(data[0]).map(val => ({ label: val, value: val }))
-          this.tableInfo2.data = data
-        } else {
-          this.xml = DataContent
+      GetPushRecord({ RruId: rows.RRU_ID }).then(res => {
+        const { DataStyle = 'TEXT', DataContent = '无详细内容' } = res
+        if (res.DataStyle && res.DataContent) {
+          this.detailVisible = true
+          this.DataStyle = DataStyle
+          if (DataStyle === 'TABLE') {
+            const data = JSON.parse(DataContent)
+            this.tableInfo2.fieldList = Object.keys(data[0]).map(val => ({ label: val, value: val }))
+            this.tableInfo2.data = data
+          } else {
+            this.xml = DataContent
+          }
         }
       })
     },

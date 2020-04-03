@@ -69,7 +69,7 @@
           <!-- 表格 -->
           <comp-table
             :listen-height="false"
-            :height="200"
+            :height="'calc(100vh - 380px)'"
             :refresh="tableInfo.refresh"
             :init-curpage="tableInfo.initCurpage"
             :data.sync="tableInfo.data"
@@ -80,6 +80,9 @@
             :query="tableInfo.query"
             :field-list="tableInfo.fieldList"
             :list-type-info="selects"
+            :handle="tableInfo.handle"
+            @handleClick="handleClick"
+            @handleEvent="handleEvent"
           >
             <!-- 自定义插槽的使用 -->
             <template v-slot:col-btn="slotProps">
@@ -140,14 +143,25 @@ export default {
           { state: 'push', hidden: false, label: '次数', value: 'UPLOAD_TIMES' },
 
           { state: 'read', hidden: true, label: '类别', value: 'CLASS_NAME' },
-          { state: 'read', hidden: true, label: '标识', value: 'CONTENT_NAME' },
+          { state: 'read', hidden: true, label: '标识', value: 'SERVICE_NAME' },
           { state: 'read', hidden: true, label: '名称', value: 'SERVICE_NAME' },
           { state: 'read', hidden: true, label: '监控路由', value: 'MONITOR_ROUTE_NAME' },
           { state: 'read', hidden: true, label: '状态', value: 'STATUS' },
-          { state: 'read', hidden: true, label: '末次调阅时间', value: 'MONITOR_ROUTE_NAME' },
+          { state: 'read', hidden: true, label: '末次调阅时间', value: 'REQUEST_DATE_TIME' }
 
-          { label: '操作', value: 'btn', type: 'slot', width: '200' }
-        ]
+          // { label: '操作', value: 'btn', type: 'slot', width: '200' }
+        ],
+        handle: {
+          fixed: 'right',
+          label: '操作',
+          width: '200',
+          btList: [
+            // { label: 'STOP', type: 'primary', event: 'OperationService', show: true },
+            { label: ({ STATUS }) => STATUS === 'RUNNING' ? 'STOP' : 'START', type: 'primary', event: 'OperationService', show: true },
+            { label: '推送记录', type: 'primary', event: 'toRecordPage', show: true },
+            { label: '调阅记录', type: 'primary', event: 'toRecordPage', show: true }
+          ]
+        }
       },
 
       // 表单配置表
@@ -156,7 +170,7 @@ export default {
         data: {},
         fieldList: [
           { label: '上报机构', value: 'ReportOrganCode', type: 'input', disabled: true },
-          { label: '上报项目', value: 'ProjectShortName ', type: 'input', disabled: true },
+          { label: '上报项目', value: 'ProjectShortName', type: 'input', disabled: true },
 
           { label: '上报周期', value: 'ReportCycle', type: 'input', disabled: true, hidden: false },
           { label: '输出类型', value: 'TaskOutType', type: 'input', disabled: true, hidden: false },
@@ -187,6 +201,7 @@ export default {
       OperationService({ keyValue, action, ProjectId: this.tableInfo.query.ProjectId }).then(res => {
         this.$message(res)
         this.updateTable()
+        this.tableInfo.handle.btList
       })
     },
     CommunicationService(keyValue, state) {
@@ -226,10 +241,18 @@ export default {
           item.hidden = true
         }
       })
+
+      this.tableInfo.handle.btList[2].show = true
+      this.tableInfo.handle.btList[1].show = true
+
       if (state === 'push') {
+        this.tableInfo.handle.btList[2].show = false
+
         this.formInfo.fieldList[2].hidden = this.formInfo.fieldList[3].hidden = false
         this.formInfo.fieldList[4].hidden = this.formInfo.fieldList[5].hidden = true
       } else {
+        this.tableInfo.handle.btList[1].show = false
+
         this.formInfo.fieldList[2].hidden = this.formInfo.fieldList[3].hidden = true
         this.formInfo.fieldList[4].hidden = this.formInfo.fieldList[5].hidden = false
       }

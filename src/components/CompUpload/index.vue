@@ -8,7 +8,7 @@
       name="FormFile"
       :show-file-list="false"
       :on-change="handlePreview"
-
+      :on-success="onSuccess"
       :headers="headers"
     >
       <el-button :loading="loading" type="primary">{{ label }}</el-button>
@@ -25,7 +25,8 @@ export default {
   props: {
     data: [Object],
     action: [String],
-    label: [String]
+    label: [String],
+    onSuccess: [Function]
   },
   data() {
     const baseUrl = process.env.VUE_APP_BASE_API

@@ -6,18 +6,18 @@
       </el-col>
     </el-row>
     <el-table :data="tableData" border :show-header="false" style="width: 100%">
-      <el-table-column type="index" width="50"></el-table-column>
+      <el-table-column type="index" width="50" />
       <el-table-column prop="address">
         <template slot-scope="scope">
-          <span>{{scope.row.ConfigName}}</span>
+          <span>{{ scope.row.ConfigName }}</span>
           <div class="selectBox">
-            <el-select v-model="scope.row.ConfigContent" placeholder="请选择">
+            <el-select v-model="scope.row.ConfigContent" clearable placeholder="请选择">
               <el-option
                 v-for="item in selects.SystemConfig"
                 :key="item.ClassCode"
                 :label="item.ClassName"
                 :value="item.ClassCode"
-              ></el-option>
+              />
             </el-select>
           </div>
         </template>

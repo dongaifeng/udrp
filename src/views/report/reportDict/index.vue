@@ -6,6 +6,7 @@
     <!-- 新建 -->
     <el-dialog
       v-if="memberMaintainVisible"
+      :close-on-click-modal="false"
       title="编辑推送项目"
       :visible.sync="memberMaintainVisible"
       custom-class="no-padding"

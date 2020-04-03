@@ -54,6 +54,7 @@
     <!-- 新建 -->
     <el-dialog
       v-if="addModelVisible"
+      :close-on-click-modal="false"
       title="编辑推送项目"
       :visible.sync="addModelVisible"
       custom-class="no-padding"
