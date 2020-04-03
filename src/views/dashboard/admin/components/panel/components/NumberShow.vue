@@ -47,7 +47,7 @@ export default {
       this.range = ['a', 'b']
     },
     goPage() {
-      this.$router.push({ path: '/monitor/report', query: { a: 'a' }})
+      this.$router.push({ path: '/monitor/report', query: { a: 'b' }})
     },
     format(percentage) {
       return percentage
